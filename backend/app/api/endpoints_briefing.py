@@ -21,10 +21,11 @@ async def generate_lawyer_briefing(req: BriefingRequest):
     target_role = req.target_role or "General Counsel"
     comparison_data = req.comparison_data
 
-    if doc.briefing_cache and not comparison_data:
+    # Return cached role briefing if available for current document session
+    if isinstance(doc.briefing_cache, dict) and target_role in doc.briefing_cache and not comparison_data:
         return {
             "status": "success",
-            "briefing": doc.briefing_cache,
+            "briefing": doc.briefing_cache[target_role],
             "disclaimer": DISCLAIMER_TEXT
         }
 
@@ -37,7 +38,10 @@ async def generate_lawyer_briefing(req: BriefingRequest):
             comparison_data=comparison_data
         )
         if not comparison_data:
-            doc.briefing_cache = briefing_data
+            if isinstance(doc.briefing_cache, dict):
+                doc.briefing_cache[target_role] = briefing_data
+            else:
+                doc.briefing_cache = {target_role: briefing_data}
 
         return {
             "status": "success",

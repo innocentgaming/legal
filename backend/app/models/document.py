@@ -109,9 +109,9 @@ class InMemoryDocument:
         self.sections: List[SectionModel] = []
         self.clauses: List[Dict[str, Any]] = []
         
-        # Session intelligence cache
+        # Session intelligence cache (strictly scoped to active document lifecycle)
         self.analysis_cache: Optional[Dict[str, Any]] = None
-        self.briefing_cache: Optional[Dict[str, Any]] = None
+        self.briefing_cache: Dict[str, Any] = {}
 
     def add_section(self, section: SectionModel):
         self.sections.append(section)
