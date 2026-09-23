@@ -1,17 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Professional Color Palette (High Trust, Clean, Accessible) */
-  --bg-primary: #0f172a;       /* Deep slate base */
-  --bg-secondary: #1e293b;     /* Card surface */
+  /* Professional Color Palette (High Trust, Dark Slate Luxury, Accessible) */
+  --bg-primary: #090d16;       /* Deep slate-midnight base */
+  --bg-secondary: #131b2e;     /* Card surface */
   --bg-surface: #1e293b;
   --bg-surface-elevated: #273549;
   --bg-surface-subtle: rgba(255, 255, 255, 0.03);
   
-  --border-subtle: #334155;
+  --border-subtle: rgba(255, 255, 255, 0.08);
   --border-focus: #6366f1;
   --focus-ring: #818cf8;
 
@@ -22,6 +22,7 @@
 
   --accent-primary: #6366f1;
   --accent-hover: #4f46e5;
+  --accent-glow: rgba(99, 102, 241, 0.35);
   --accent-subtle: rgba(99, 102, 241, 0.15);
 
   /* Risk Badges (Paired with text & icons) */
@@ -54,6 +55,10 @@ html {
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.14) 0%, transparent 60%),
+    radial-gradient(circle at 85% 30%, rgba(56, 189, 248, 0.06) 0%, transparent 50%);
+  background-attachment: fixed;
   color: var(--text-main);
   min-height: 100vh;
   overflow-x: hidden;
@@ -75,19 +80,39 @@ body {
   background: var(--bg-primary);
 }
 ::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: #334155;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: #475569;
 }
 
 /* Professional Surface Panels */
 .glass-panel {
-  background: var(--bg-secondary);
+  background: rgba(19, 27, 46, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: 12px;
   max-width: 100%;
+}
+
+/* Interactive Cards with Smooth Lift */
+.interactive-card {
+  background: rgba(19, 27, 46, 0.65);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.interactive-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.5), 0 0 25px rgba(99, 102, 241, 0.15);
+  background: rgba(25, 36, 60, 0.85);
 }
 
 /* Explicit Text Badges */
@@ -145,49 +170,96 @@ body {
 
 /* Buttons */
 .btn-primary {
-  background: var(--accent-primary);
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  padding: 8px 16px;
-  font-weight: 600;
-  font-size: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 700;
+  font-size: 0.88rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+  transition: all 0.2s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
-  padding: 8px 14px;
+  border-radius: 8px;
+  padding: 9px 16px;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.86rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  gap: 8px;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: #64748b;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 .btn-secondary:disabled, .btn-primary:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* Gradient Text Effect */
+.gradient-text {
+  background: linear-gradient(135deg, #ffffff 10%, #e2e8f0 45%, #a5b4fc 90%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Pill Badge with Shimmer */
+.pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #c7d2fe;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+/* Stat Pill Cards */
+.stat-pill-card {
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: rgba(19, 27, 46, 0.6);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.stat-pill-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(25, 36, 60, 0.7);
 }
 
 /* Clause Target Highlight */
@@ -198,76 +270,55 @@ body {
 
 /* Diff Tokens */
 .diff-del {
-  background-color: rgba(239, 68, 68, 0.25);
-  color: #fecaca;
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
   text-decoration: line-through;
   padding: 1px 4px;
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
-.diff-ins {
-  background-color: rgba(16, 185, 129, 0.25);
-  color: #a7f3d0;
+.diff-add {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
   font-weight: 600;
   padding: 1px 4px;
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
-/* Toast Animation */
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Print Styles */
-@media print {
-  body {
-    background-color: #ffffff !important;
-    color: #0f172a !important;
-  }
-  .no-print {
-    display: none !important;
-  }
-  .glass-panel {
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
-    color: #0f172a !important;
-    box-shadow: none !important;
-  }
-  .printable-briefing {
-    color: #0f172a !important;
-  }
-}
-
-/* Responsive Layout & Mobile Menu Queries */
+/* ==========================================================================
+   Responsive & Print Optimizations
+   ========================================================================== */
 @media (max-width: 960px) {
   .workspace-layout {
     grid-template-columns: 1fr !important;
     height: auto !important;
-    overflow: visible !important;
+    overflow-y: visible !important;
   }
 }
 
 @media (max-width: 768px) {
-  .desktop-nav {
+  .desktop-nav, .desktop-nav-status {
     display: none !important;
   }
   .mobile-menu-toggle {
-    display: flex !important;
+    display: block !important;
+  }
+  .comparison-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 
-@media (max-width: 600px) {
-  .desktop-nav-status {
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print, header, footer, .modal-overlay, button {
     display: none !important;
   }
-  h1 {
-    font-size: 1.8rem !important;
+  .glass-panel {
+    background: #ffffff !important;
+    border: 1px solid #cccccc !important;
+    box-shadow: none !important;
   }
 }
