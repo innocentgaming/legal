@@ -49,7 +49,9 @@ def test_api():
     res = client.post(f"{base_url}/briefing/generate", json={"target_role": "General Counsel"})
     assert res.status_code == 200
     briefing_data = res.json()
-    print(f"[OK] Lawyer briefing passed: {len(briefing_data['action_items'])} action items generated.")
+    b_obj = briefing_data.get("briefing", briefing_data)
+    questions = b_obj.get("section_9_lawyer_questions") or b_obj.get("action_items", [])
+    print(f"[OK] Lawyer briefing passed: {len(questions)} lawyer questions / action items generated.")
 
     print("\nALL PHASE 1 & PHASE 2 REST API ENDPOINTS VERIFIED AND OPERATIONAL!")
 

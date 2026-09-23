@@ -1,5 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { Briefcase, Sparkles, CheckCircle2, AlertOctagon, Download, UserCheck } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Briefcase, 
+  Sparkles, 
+  Download, 
+  FileText, 
+  Printer, 
+  Check, 
+  Copy, 
+  AlertTriangle, 
+  Clock, 
+  ShieldAlert, 
+  HelpCircle, 
+  Scale, 
+  Layers, 
+  CheckCircle2, 
+  Bookmark, 
+  FileCheck, 
+  ArrowRight,
+  Info
+} from 'lucide-react';
 import { briefingService } from '../services/contractService';
 import { LoadingState } from '../components/LoadingState';
 
@@ -7,6 +26,8 @@ export default function BriefingPage({ document, clauses }) {
   const [targetRole, setTargetRole] = useState('General Counsel');
   const [briefingData, setBriefingData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const printRef = useRef(null);
 
   useEffect(() => {
     if (document && !briefingData) {
@@ -19,7 +40,8 @@ export default function BriefingPage({ document, clauses }) {
     setLoading(true);
     try {
       const data = await briefingService.generateBriefing(targetRole);
-      setBriefingData(data);
+      // Backend returns { status: "success", briefing: { ... }, disclaimer: "..." }
+      setBriefingData(data.briefing || data);
     } catch (err) {
       alert(`Failed to generate briefing: ${err.message}`);
     } finally {
@@ -27,149 +49,412 @@ export default function BriefingPage({ document, clauses }) {
     }
   };
 
-  const handleExportBriefing = () => {
+  const handleExportMarkdown = () => {
     if (!briefingData) return;
-    const blob = new Blob([JSON.stringify(briefingData, null, 2)], { type: 'application/json' });
+    const md = briefingData.markdown_content || '# Lawyer Briefing';
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Lawyer_Briefing_${document?.filename || 'contract'}.json`;
+    a.download = `Lawyer_Briefing_${document?.filename || 'contract'}.md`;
     a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCopyMarkdown = () => {
+    if (!briefingData?.markdown_content) return;
+    navigator.clipboard.writeText(briefingData.markdown_content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handlePrintPDF = () => {
+    window.print();
   };
 
   if (!document) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <h3>No Document Ingested</h3>
-        <p style={{ color: 'var(--text-muted)' }}>Please upload a contract to generate a lawyer briefing.</p>
+      <div style={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px',
+        textAlign: 'center',
+      }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          borderRadius: '12px',
+          background: 'rgba(99, 102, 241, 0.15)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '12px',
+        }}>
+          <Briefcase size={24} color="#818cf8" />
+        </div>
+        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '6px' }}>No Document Ingested</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.84rem' }}>
+          Please upload a contract or select a benchmark sample to generate a 10-section lawyer preparation briefing.
+        </p>
       </div>
     );
   }
 
+  const b = briefingData;
+
   return (
     <div style={{
-      maxWidth: '960px',
-      margin: '16px auto',
-      padding: '0 20px',
+      maxWidth: '1180px',
+      margin: '14px auto',
+      padding: '0 20px 40px',
       display: 'flex',
       flexDirection: 'column',
       gap: '16px',
+      height: 'calc(100vh - 84px)',
+      overflowY: 'auto'
     }}>
-      {/* Header controls */}
-      <div className="glass-panel" style={{
-        padding: '16px 20px',
+      {/* Top Header & Export Action Controls (Hidden during print) */}
+      <div className="glass-panel no-print" style={{
+        padding: '14px 20px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Briefcase size={22} color="#818cf8" />
+          <div style={{
+            width: '38px',
+            height: '38px',
+            borderRadius: '10px',
+            background: 'rgba(99, 102, 241, 0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid rgba(99, 102, 241, 0.3)'
+          }}>
+            <Briefcase size={20} color="#818cf8" />
+          </div>
           <div>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Lawyer Executive Briefing</h2>
-            <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-              Target Document: <strong>{document.filename}</strong>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
+              Prepare for My Lawyer — 1-Page Briefing
+            </h2>
+            <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', margin: 0 }}>
+              Document: <strong>{document.filename}</strong> • Structured with citations for your consultation
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Action Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <select
             value={targetRole}
             onChange={(e) => setTargetRole(e.target.value)}
             className="btn-secondary"
-            style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+            style={{ fontSize: '0.76rem', padding: '6px 10px' }}
           >
             <option value="General Counsel">General Counsel</option>
-            <option value="Procurement Lead">Procurement Lead</option>
-            <option value="C-Suite Executive">C-Suite Executive</option>
+            <option value="Outside Commercial Counsel">Outside Commercial Counsel</option>
+            <option value="Procurement & Negotiation Lead">Procurement Lead</option>
+            <option value="Founder / Executive">Founder / Executive</option>
           </select>
 
-          <button onClick={handleGenerateBriefing} disabled={loading} className="btn-primary" style={{ fontSize: '0.78rem' }}>
+          <button onClick={handleGenerateBriefing} disabled={loading} className="btn-primary" style={{ fontSize: '0.76rem', padding: '6px 14px' }}>
             <Sparkles size={13} />
             <span>Regenerate</span>
           </button>
 
-          {briefingData && (
-            <button onClick={handleExportBriefing} className="btn-secondary" style={{ fontSize: '0.78rem' }}>
-              <Download size={13} />
-              <span>Export JSON</span>
-            </button>
+          {b && (
+            <>
+              <button onClick={handleCopyMarkdown} className="btn-secondary" style={{ fontSize: '0.76rem', padding: '6px 10px' }}>
+                {copied ? <Check size={13} color="#34d399" /> : <Copy size={13} />}
+                <span>{copied ? 'Copied' : 'Copy MD'}</span>
+              </button>
+
+              <button onClick={handleExportMarkdown} className="btn-secondary" style={{ fontSize: '0.76rem', padding: '6px 10px' }}>
+                <Download size={13} />
+                <span>Export .MD</span>
+              </button>
+
+              <button onClick={handlePrintPDF} className="btn-secondary" style={{ fontSize: '0.76rem', padding: '6px 10px', color: '#60a5fa' }}>
+                <Printer size={13} />
+                <span>Print / PDF</span>
+              </button>
+            </>
           )}
         </div>
       </div>
 
+      {/* Mandatory Legal Disclaimer Banner */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '10px 14px',
+        borderRadius: '8px',
+        background: 'rgba(99, 102, 241, 0.12)',
+        border: '1px solid rgba(99, 102, 241, 0.3)',
+        color: '#c7d2fe',
+        fontSize: '0.78rem',
+        fontWeight: 600,
+        lineHeight: '1.4'
+      }}>
+        <Info size={16} color="#818cf8" style={{ flexShrink: 0 }} />
+        <span>
+          <strong>DISCLAIMER:</strong> {b?.disclaimer || "Clarity provides document understanding and preparation support. It is not a substitute for professional legal advice."}
+        </span>
+      </div>
+
+      {/* Main Briefing Body */}
       {loading ? (
-        <LoadingState message="Synthesizing deal-breaker risks & negotiation action checklist..." size="large" />
-      ) : briefingData ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {/* Executive Summary */}
-          <div className="glass-panel" style={{ padding: '16px', borderLeft: '4px solid #6366f1' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#a5b4fc', marginBottom: '4px' }}>
-              Strategic Executive Summary
+        <LoadingState message="Synthesizing 10-section lawyer preparation briefing with exact citations..." size="large" />
+      ) : b ? (
+        <div ref={printRef} className="printable-briefing" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          
+          {/* SECTION 1: Document Overview */}
+          {b.section_1_overview && (
+            <div className="glass-panel" style={{ padding: '16px', borderLeft: '4px solid #6366f1' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase', color: '#a5b4fc', margin: 0 }}>
+                  1. Document Overview
+                </h3>
+                <span className="badge-low">{b.section_1_overview.contract_type}</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px', marginBottom: '10px', fontSize: '0.78rem' }}>
+                <div><strong>Target File:</strong> {b.section_1_overview.filename}</div>
+                <div><strong>Parties:</strong> {b.section_1_overview.parties_detected?.join(' & ') || 'Not specified'}</div>
+                <div><strong>Term / Duration:</strong> {b.section_1_overview.effective_term}</div>
+                <div><strong>Total Clauses:</strong> {b.section_1_overview.total_clauses_analyzed}</div>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-main)', lineHeight: '1.5', margin: 0, background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '6px' }}>
+                {b.section_1_overview.summary_paragraph}
+              </p>
             </div>
-            <p style={{ fontSize: '0.84rem', color: 'var(--text-main)', lineHeight: '1.5' }}>
-              {briefingData.executive_summary}
-            </p>
-          </div>
+          )}
 
-          {/* Deal Breaker Risks */}
-          <div className="glass-panel" style={{ padding: '16px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-              <AlertOctagon size={16} color="#ef4444" />
-              <span style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', color: '#fca5a5' }}>
-                Deal-Breaker Risk Exposures ({briefingData.deal_breaker_risks.length})
-              </span>
+          {/* SECTION 2: Key Clauses */}
+          {b.section_2_key_clauses && (
+            <div className="glass-panel" style={{ padding: '16px' }}>
+              <h3 style={{ fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase', color: '#6ee7b7', marginBottom: '10px' }}>
+                2. Key Clauses ({b.section_2_key_clauses.length})
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
+                {b.section_2_key_clauses.map((k, idx) => (
+                  <div key={idx} style={{ padding: '10px', borderRadius: '6px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#6ee7b7' }}>
+                        Clause {k.clause_number}: {k.title}
+                      </span>
+                      <span style={{ fontSize: '0.66rem', color: 'var(--text-dim)', background: 'rgba(0,0,0,0.3)', padding: '1px 5px', borderRadius: '3px' }}>
+                        {k.source_citation}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.4', margin: 0 }}>
+                      {k.summary}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {briefingData.deal_breaker_risks.map((risk, i) => (
-                <li key={i} style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                  <span style={{ color: '#ef4444', fontWeight: 'bold' }}>•</span>
-                  <span>{risk}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          )}
 
-          {/* Negotiation Strategy */}
-          <div className="glass-panel" style={{ padding: '16px' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#6ee7b7', marginBottom: '8px' }}>
-              Recommended Negotiation Strategy
+          {/* SECTION 3: High-Risk / Worth-Noting Clauses */}
+          {b.section_3_risk_clauses && (
+            <div className="glass-panel" style={{ padding: '16px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                <ShieldAlert size={16} color="#ef4444" />
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase', color: '#fca5a5', margin: 0 }}>
+                  3. High-Risk & Worth-Noting Clauses ({b.section_3_risk_clauses.length})
+                </h3>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {b.section_3_risk_clauses.map((r, idx) => (
+                  <div key={idx} style={{ padding: '10px 12px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fca5a5' }}>
+                        Clause {r.clause_number}: {r.title}
+                      </span>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <span className={r.risk_level === 'HIGH_RISK' ? 'badge-high' : 'badge-med'}>{r.risk_level}</span>
+                        <span style={{ fontSize: '0.66rem', color: 'var(--text-dim)' }}>{r.source_citation}</span>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '0.76rem', color: 'var(--text-main)', lineHeight: '1.4', marginBottom: '4px' }}>
+                      <strong>Issue:</strong> {r.reason}
+                    </div>
+                    {r.evidence && (
+                      <div style={{ fontSize: '0.72rem', color: '#cbd5e1', fontStyle: 'italic', background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '4px' }}>
+                        "{r.evidence}"
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {briefingData.negotiation_strategy.map((step, i) => (
-                <div key={i} style={{ fontSize: '0.8rem', color: 'var(--text-main)', lineHeight: '1.4' }}>
-                  {step}
+          )}
+
+          {/* 2-Column Grid for Sections 4 & 5 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            {/* SECTION 4: Open Questions */}
+            {b.section_4_open_questions && (
+              <div className="glass-panel" style={{ padding: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                  <HelpCircle size={15} color="#818cf8" />
+                  <h3 style={{ fontSize: '0.86rem', fontWeight: 800, textTransform: 'uppercase', color: '#a5b4fc', margin: 0 }}>
+                    4. Open Questions & Missing Terms
+                  </h3>
                 </div>
-              ))}
-            </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {b.section_4_open_questions.map((q, idx) => (
+                    <li key={idx} style={{ fontSize: '0.76rem', color: 'var(--text-main)', lineHeight: '1.4', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                      <span style={{ color: '#818cf8', fontWeight: 700 }}>•</span>
+                      <span>{q}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* SECTION 5: Important Deadlines */}
+            {b.section_5_deadlines && (
+              <div className="glass-panel" style={{ padding: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                  <Clock size={15} color="#fbbf24" />
+                  <h3 style={{ fontSize: '0.86rem', fontWeight: 800, textTransform: 'uppercase', color: '#fbbf24', margin: 0 }}>
+                    5. Important Deadlines & Timeframes
+                  </h3>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {b.section_5_deadlines.map((d, idx) => (
+                    <div key={idx} style={{ padding: '6px 8px', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.2)', fontSize: '0.74rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, color: '#fbbf24' }}>
+                        <span>{d.action}</span>
+                        <span>{d.timeframe}</span>
+                      </div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>
+                        {d.impact} ({d.source_citation})
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Action Items */}
-          <div className="glass-panel" style={{ padding: '16px' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#a5b4fc', marginBottom: '10px' }}>
-              Action Item Checklist ({briefingData.action_items.length})
+          {/* 2-Column Grid for Sections 6 & 7 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            {/* SECTION 6: Key Obligations */}
+            {b.section_6_obligations && (
+              <div className="glass-panel" style={{ padding: '16px' }}>
+                <h3 style={{ fontSize: '0.86rem', fontWeight: 800, textTransform: 'uppercase', color: '#60a5fa', marginBottom: '10px' }}>
+                  6. Key Obligations ({b.section_6_obligations.length})
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {b.section_6_obligations.map((o, idx) => (
+                    <div key={idx} style={{ padding: '6px 8px', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.06)', border: '1px solid rgba(59, 130, 246, 0.2)', fontSize: '0.75rem' }}>
+                      <div style={{ color: 'var(--text-main)', lineHeight: '1.4' }}>{o.duty}</div>
+                      <div style={{ color: '#93c5fd', fontSize: '0.68rem', marginTop: '2px' }}>
+                        [{o.source_citation}]
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* SECTION 7: Key Rights */}
+            {b.section_7_rights && (
+              <div className="glass-panel" style={{ padding: '16px' }}>
+                <h3 style={{ fontSize: '0.86rem', fontWeight: 800, textTransform: 'uppercase', color: '#a78bfa', marginBottom: '10px' }}>
+                  7. Key Rights & Entitlements ({b.section_7_rights.length})
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {b.section_7_rights.map((r, idx) => (
+                    <div key={idx} style={{ padding: '6px 8px', borderRadius: '4px', background: 'rgba(167, 139, 250, 0.06)', border: '1px solid rgba(167, 139, 250, 0.2)', fontSize: '0.75rem' }}>
+                      <div style={{ color: 'var(--text-main)', lineHeight: '1.4' }}>{r.entitlement}</div>
+                      <div style={{ color: '#c4b5fd', fontSize: '0.68rem', marginTop: '2px' }}>
+                        [{r.source_citation}]
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* SECTION 8: Potential Negotiation Points */}
+          {b.section_8_negotiation_points && (
+            <div className="glass-panel" style={{ padding: '16px' }}>
+              <h3 style={{ fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase', color: '#6ee7b7', marginBottom: '10px' }}>
+                8. Potential Negotiation Points ({b.section_8_negotiation_points.length})
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {b.section_8_negotiation_points.map((np, idx) => (
+                  <div key={idx} style={{ padding: '8px 12px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.2)', fontSize: '0.76rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                      <strong style={{ color: '#6ee7b7' }}>{np.topic}</strong>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>{np.source_citation}</span>
+                    </div>
+                    <div style={{ color: 'var(--text-muted)', marginBottom: '3px' }}>Current: {np.current_clause_state}</div>
+                    <div style={{ color: '#e0e7ff', fontWeight: 600 }}>
+                      👉 {np.suggested_discussion_point}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {briefingData.action_items.map((item, i) => (
-                <div key={i} className="glass-panel" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span className={item.priority === 'Critical' ? 'badge-high' : 'badge-med'}>
-                      {item.priority}
-                    </span>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
-                      {item.clause_ref}
+          )}
+
+          {/* SECTION 9: Questions to Ask a Lawyer */}
+          {b.section_9_lawyer_questions && (
+            <div className="glass-panel" style={{ padding: '16px', border: '1px solid rgba(99, 102, 241, 0.4)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                <Scale size={16} color="#818cf8" />
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase', color: '#c7d2fe', margin: 0 }}>
+                  9. Questions to Ask Your Lawyer ({b.section_9_lawyer_questions.length})
+                </h3>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
+                {b.section_9_lawyer_questions.map((lq, idx) => (
+                  <div key={idx} style={{ padding: '10px 12px', borderRadius: '6px', background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.25)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#818cf8', textTransform: 'uppercase' }}>
+                      {lq.category} • {lq.relevant_clause}
+                    </div>
+                    <p style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-main)', lineHeight: '1.4', margin: 0 }}>
+                      "{lq.question}"
+                    </p>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                      Context: {lq.context}
                     </span>
                   </div>
-                  <p style={{ fontSize: '0.8rem', fontWeight: 600 }}>{item.action}</p>
-                  {item.suggested_language && (
-                    <div style={{ fontSize: '0.74rem', color: '#cbd5e1', background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '4px' }}>
-                      <strong>Suggested Counter-Text:</strong> "{item.suggested_language}"
-                    </div>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* SECTION 10: Document Comparison Findings */}
+          {b.section_10_comparison_findings && (
+            <div className="glass-panel" style={{ padding: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Layers size={15} color="#a78bfa" />
+                  <h3 style={{ fontSize: '0.86rem', fontWeight: 800, textTransform: 'uppercase', color: '#c4b5fd', margin: 0 }}>
+                    10. Document Comparison Findings
+                  </h3>
+                </div>
+                {b.section_10_comparison_findings.comparison_performed && (
+                  <span className="badge-low">{b.section_10_comparison_findings.similarity_score}% Similar</span>
+                )}
+              </div>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-main)', lineHeight: '1.45', margin: 0 }}>
+                {b.section_10_comparison_findings.key_differences_summary}
+              </p>
+            </div>
+          )}
+
         </div>
       ) : null}
     </div>
