@@ -1,0 +1,13 @@
+MASTER SAAS AGREEMENT
+
+1. SUBSCRIPTION SERVICES
+Provider grants Customer access to cloud services subject to timely fee payments.
+
+2. INDEMNIFICATION AND LIABILITIES
+Customer shall indemnify Provider against third-party claims. Provider offers no indemnification. Customer liability is unlimited.
+
+3. TERMINATION AND CURE
+Provider may terminate immediately without notice upon any breach. Customer may terminate only upon 60 days written notice.
+
+4. RESTRICTIVE COVENANTS
+Customer shall not solicit or hire Provider employees for 24 months post-termination.
