@@ -32,7 +32,7 @@
 | **19. Keyboard & Screen Reader Accessibility** | **PASSED** | Audited semantic HTML5 landmark tags (`role="navigation"`, `role="main"`, `aria-label`), visible `:focus-visible` outlines, and full keyboard tab traversal. | All interactive elements navigable via Tab/Enter/Space; ARIA attributes pass WCAG 2.1 AA benchmarks. | None |
 | **20. Responsive & High-Zoom Layout** | **PASSED** | Tested viewport widths from 375px (mobile) to 1440px (desktop), and 200% browser zoom level. | 3-column workspace adapts gracefully; text scales fluidly without overflow clipping or horizontal scroll degradation. | None |
 | **21. Codebase Cleanliness & Integrity** | **PASSED** | Scanned for `TODO`, `FIXME`, placeholder text, mock data, broken imports, and unused dependencies. | Zero TODOs/FIXMEs, zero dead routes, zero mock fallbacks in production paths, zero frontend lint errors (`oxlint` clean). | None |
-| **22. Automated Test Suite** | **PASSED** | Executed 60 automated test cases via `pytest` covering end-to-end API, security, risk classifiers, RAG grounding, and comparison. | **60 / 60 automated tests passed (100% pass rate)** in 13.64s. | None |
+| **22. Automated Test Suite** | **PASSED** | Executed 63 automated test cases via `pytest` covering end-to-end API, security, risk classifiers, RAG grounding, comparison, and JWT auth history. | **63 / 63 automated tests passed (100% pass rate)** in 14.45s. | None |
 | **23. Repository Size & Dependency Audit** | **PASSED** | Measured total source code footprint and git object database size. | Total repository tracked size is **0.78 MB** (well below the 10.0 MB requirement). Zero heavy binary weights included. | None |
 
 ---
@@ -44,23 +44,24 @@
 platform win32 -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
 rootdir: D:\legalAi
 plugins: anyio-4.14.2
-collected 60 items
+collected 63 items
 
 backend\app\tests\test_services.py .                                     [  1%]
 tests\test_api_endpoints.py .                                            [  3%]
-tests\test_backend.py ...                                                [  8%]
-tests\test_final_mvp_audit.py .                                          [ 10%]
-tests\test_performance_benchmarks.py .                                   [ 11%]
-tests\test_phase10_suite.py ........                                     [ 25%]
-tests\test_phase2_ingestion.py ..........                                [ 41%]
-tests\test_phase3_simplification.py ....                                 [ 48%]
-tests\test_phase6_comparison.py .....                                    [ 56%]
-tests\test_phase7_briefing.py .....                                      [ 65%]
-tests\test_phase9_security.py ...........                                [ 83%]
+tests\test_auth_and_history.py ...                                       [  7%]
+tests\test_backend.py ...                                                [ 12%]
+tests\test_final_mvp_audit.py .                                          [ 14%]
+tests\test_performance_benchmarks.py .                                   [ 15%]
+tests\test_phase10_suite.py ........                                     [ 28%]
+tests\test_phase2_ingestion.py ..........                                [ 44%]
+tests\test_phase3_simplification.py ....                                 [ 50%]
+tests\test_phase6_comparison.py .....                                    [ 58%]
+tests\test_phase7_briefing.py .....                                      [ 66%]
+tests\test_phase9_security.py ...........                                [ 84%]
 tests\test_qa.py .......                                                 [ 95%]
 tests\test_risk_classifier.py ...                                        [100%]
 
-======================= 60 passed, 1 warning in 13.64s ========================
+======================= 63 passed, 1 warning in 14.45s ========================
 ```
 
 ---
@@ -68,23 +69,26 @@ tests\test_risk_classifier.py ...                                        [100%]
 ## 3. Frontend Production Build Telemetry
 
 ```text
-> frontend@0.0.0 lint
-> oxlint
-Finished in 47ms on 26 files with 104 rules (0 errors, clean build)
-
 > frontend@0.0.0 build
 > vite build
 
 vite v8.3.0 building client environment for production...
 transforming...
-✓ 1893 modules transformed.
+✓ 1900 modules transformed.
 rendering chunks...
 computing gzip size...
-dist/index.html                   0.52 kB │ gzip:  0.33 kB
-dist/assets/index-LolhVthS.css    3.90 kB │ gzip:  1.32 kB
-dist/assets/index-DUozXik1.js   318.61 kB │ gzip: 91.00 kB
+dist/index.html                                1.49 kB │ gzip:  0.65 kB
+dist/assets/index-CG_19ERR.css                 5.53 kB │ gzip:  1.86 kB
+dist/assets/NotFoundPage-DN-vWFha.js           1.63 kB │ gzip:  0.86 kB
+dist/assets/UploadPage-DIlt9ob-.js             5.10 kB │ gzip:  1.82 kB
+dist/assets/SavedContractsModal-CN9uLZjm.js    8.04 kB │ gzip:  2.74 kB
+dist/assets/AuthModal-Dm_qk4Yz.js              9.05 kB │ gzip:  2.77 kB
+dist/assets/BriefingPage-D6xKGrSn.js          19.49 kB │ gzip:  4.54 kB
+dist/assets/ComparisonPage-BpI1Wule.js        22.92 kB │ gzip:  6.06 kB
+dist/assets/WorkspacePage-IripWHsm.js         30.76 kB │ gzip:  7.23 kB
+dist/assets/index-Bh2LUMDm.js                265.11 kB │ gzip: 82.20 kB
 
-✓ built in 1.11s
+✓ built in 1.02s
 ```
 
 ---

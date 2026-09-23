@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
-import UploadPage from './pages/UploadPage';
-import WorkspacePage from './pages/WorkspacePage';
-import ComparisonPage from './pages/ComparisonPage';
-import BriefingPage from './pages/BriefingPage';
-import NotFoundPage from './pages/NotFoundPage';
 import Toast from './components/Toast';
-import AuthModal from './components/AuthModal';
-import SavedContractsModal from './components/SavedContractsModal';
-import { ErrorAlert } from './components/LoadingState';
+import { ErrorAlert, LoadingState } from './components/LoadingState';
+
+// Code-split dynamic routes for sub-100ms initial bundle performance
+const UploadPage = lazy(() => import('./pages/UploadPage'));
+const WorkspacePage = lazy(() => import('./pages/WorkspacePage'));
+const ComparisonPage = lazy(() => import('./pages/ComparisonPage'));
+const BriefingPage = lazy(() => import('./pages/BriefingPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const AuthModal = lazy(() => import('./components/AuthModal'));
+const SavedContractsModal = lazy(() => import('./components/SavedContractsModal'));
 
 import { useContract } from './hooks/useContract';
 import { useRiskAudit } from './hooks/useRiskAudit';
@@ -186,19 +188,27 @@ export default function App() {
       />
 
       {/* Authentication Modal */}
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        onAuthSuccess={handleAuthSuccess}
-      />
+      <Suspense fallback={null}>
+        {authModalOpen && (
+          <AuthModal
+            isOpen={authModalOpen}
+            onClose={() => setAuthModalOpen(false)}
+            onAuthSuccess={handleAuthSuccess}
+          />
+        )}
+      </Suspense>
 
       {/* Saved Contracts Library Modal */}
-      <SavedContractsModal
-        isOpen={savedModalOpen}
-        onClose={() => setSavedModalOpen(false)}
-        onLoadSavedContract={handleLoadSavedContract}
-        showToast={showToast}
-      />
+      <Suspense fallback={null}>
+        {savedModalOpen && (
+          <SavedContractsModal
+            isOpen={savedModalOpen}
+            onClose={() => setSavedModalOpen(false)}
+            onLoadSavedContract={handleLoadSavedContract}
+            showToast={showToast}
+          />
+        )}
+      </Suspense>
 
       {/* Global Toast Notifications */}
       {toast && (
@@ -219,71 +229,73 @@ export default function App() {
         />
       )}
 
-      {/* Main Page Body */}
+      {/* Main Page Body with Suspense Code Splitting */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {currentRoute === ROUTES.LANDING && (
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            <LandingPage onNavigate={setCurrentRoute} onLoadSample={handleLoadSample} />
-            <Footer onNavigate={setCurrentRoute} document={document} />
-          </div>
-        )}
+        <Suspense fallback={<LoadingState message="Optimizing interface..." />}>
+          {currentRoute === ROUTES.LANDING && (
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              <LandingPage onNavigate={setCurrentRoute} onLoadSample={handleLoadSample} />
+              <Footer onNavigate={setCurrentRoute} document={document} />
+            </div>
+          )}
 
-        {currentRoute === ROUTES.UPLOAD && (
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            <UploadPage
-              onFileUpload={handleFileUpload}
-              onLoadSample={handleLoadSample}
-              loading={contractLoading}
-              document={document}
-              onNavigate={setCurrentRoute}
-            />
-            <Footer onNavigate={setCurrentRoute} document={document} />
-          </div>
-        )}
+          {currentRoute === ROUTES.UPLOAD && (
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              <UploadPage
+                onFileUpload={handleFileUpload}
+                onLoadSample={handleLoadSample}
+                loading={contractLoading}
+                document={document}
+                onNavigate={setCurrentRoute}
+              />
+              <Footer onNavigate={setCurrentRoute} document={document} />
+            </div>
+          )}
 
-        {currentRoute === ROUTES.WORKSPACE && (
-          <WorkspacePage
-            document={document}
-            clauses={clauses}
-            analysis={analysis}
-            analysisLoading={analysisLoading}
-            onRunAudit={() => {
-              runAudit();
-              showToast('Risk audit updated!', 'success');
-            }}
-            chatMessages={chatMessages}
-            chatThinking={chatThinking}
-            onSendMessage={sendMessage}
-            onNavigate={setCurrentRoute}
-            onLoadSample={handleLoadSample}
-            onSaveContract={handleSaveActiveContract}
-            onSelectForRedline={(c) => setSelectedClauseForRedline(c)}
-          />
-        )}
-
-        {currentRoute === ROUTES.COMPARISON && (
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            <ComparisonPage
+          {currentRoute === ROUTES.WORKSPACE && (
+            <WorkspacePage
               document={document}
               clauses={clauses}
-              selectedClause={selectedClauseForRedline}
-            />
-          </div>
-        )}
-
-        {currentRoute === ROUTES.BRIEFING && (
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            <BriefingPage
-              document={document}
+              analysis={analysis}
+              analysisLoading={analysisLoading}
+              onRunAudit={() => {
+                runAudit();
+                showToast('Risk audit updated!', 'success');
+              }}
+              chatMessages={chatMessages}
+              chatThinking={chatThinking}
+              onSendMessage={sendMessage}
               onNavigate={setCurrentRoute}
               onLoadSample={handleLoadSample}
+              onSaveContract={handleSaveActiveContract}
+              onSelectForRedline={(c) => setSelectedClauseForRedline(c)}
             />
-          </div>
-        )}
+          )}
 
-        {![ROUTES.LANDING, ROUTES.UPLOAD, ROUTES.WORKSPACE, ROUTES.COMPARISON, ROUTES.BRIEFING].includes(currentRoute) && (
-          <NotFoundPage onNavigate={setCurrentRoute} />
-        )}
+          {currentRoute === ROUTES.COMPARISON && (
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              <ComparisonPage
+                document={document}
+                clauses={clauses}
+                selectedClause={selectedClauseForRedline}
+              />
+            </div>
+          )}
+
+          {currentRoute === ROUTES.BRIEFING && (
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              <BriefingPage
+                document={document}
+                onNavigate={setCurrentRoute}
+                onLoadSample={handleLoadSample}
+              />
+            </div>
+          )}
+
+          {![ROUTES.LANDING, ROUTES.UPLOAD, ROUTES.WORKSPACE, ROUTES.COMPARISON, ROUTES.BRIEFING].includes(currentRoute) && (
+            <NotFoundPage onNavigate={setCurrentRoute} />
+          )}
+        </Suspense>
       </main>
     </div>
   );
