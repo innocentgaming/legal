@@ -24,7 +24,7 @@
   --accent-hover: #4f46e5;
   --accent-subtle: rgba(99, 102, 241, 0.15);
 
-  /* Risk Badges (Never rely solely on color - paired with text & icons) */
+  /* Risk Badges (Paired with text & icons) */
   --risk-high-text: #fecaca;
   --risk-high-bg: rgba(239, 68, 68, 0.16);
   --risk-high-border: #f87171;
@@ -48,6 +48,7 @@ html {
   font-size: 16px;
   line-height: 1.5;
   -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -86,6 +87,7 @@ body {
   background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
+  max-width: 100%;
 }
 
 /* Explicit Text Badges */
@@ -211,6 +213,18 @@ body {
   border-radius: 3px;
 }
 
+/* Toast Animation */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Print Styles */
 @media print {
   body {
@@ -231,11 +245,29 @@ body {
   }
 }
 
-/* Responsive Grid Helper */
+/* Responsive Layout & Mobile Menu Queries */
 @media (max-width: 960px) {
   .workspace-layout {
     grid-template-columns: 1fr !important;
     height: auto !important;
     overflow: visible !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  .mobile-menu-toggle {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .desktop-nav-status {
+    display: none !important;
+  }
+  h1 {
+    font-size: 1.8rem !important;
   }
 }

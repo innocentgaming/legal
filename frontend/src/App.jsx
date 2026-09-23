@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
 import UploadPage from './pages/UploadPage';
 import WorkspacePage from './pages/WorkspacePage';
 import ComparisonPage from './pages/ComparisonPage';
 import BriefingPage from './pages/BriefingPage';
+import NotFoundPage from './pages/NotFoundPage';
+import Toast from './components/Toast';
 import { ErrorAlert } from './components/LoadingState';
 
 import { useContract } from './hooks/useContract';
@@ -16,7 +19,7 @@ import { ROUTES } from './types/constants';
 export default function App() {
   const [currentRoute, setCurrentRoute] = useState(ROUTES.LANDING);
   const [selectedClauseForRedline, setSelectedClauseForRedline] = useState(null);
-  const [systemStatus, setSystemStatus] = useState(null);
+  const [toast, setToast] = useState(null); // { message, type }
 
   const {
     document,
@@ -47,9 +50,35 @@ export default function App() {
   // Load system status on mount
   useEffect(() => {
     contractService.getSystemStatus()
-      .then(setSystemStatus)
-      .catch((err) => console.warn('Backend not yet reachable:', err.message));
+      .catch((err) => console.warn('Backend status check:', err.message));
   }, []);
+
+  // Update dynamic page title on route change
+  useEffect(() => {
+    switch (currentRoute) {
+      case ROUTES.LANDING:
+        window.document.title = 'CLARITY — AI Legal Co-Pilot';
+        break;
+      case ROUTES.UPLOAD:
+        window.document.title = 'CLARITY — Ingest Contract';
+        break;
+      case ROUTES.WORKSPACE:
+        window.document.title = document ? `CLARITY — ${document.filename}` : 'CLARITY — Workspace';
+        break;
+      case ROUTES.COMPARISON:
+        window.document.title = 'CLARITY — Compare Documents';
+        break;
+      case ROUTES.BRIEFING:
+        window.document.title = 'CLARITY — Lawyer Preparation Briefing';
+        break;
+      default:
+        window.document.title = 'CLARITY — AI Legal Co-Pilot';
+    }
+  }, [currentRoute, document]);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+  };
 
   const handleFileUpload = async (file) => {
     try {
@@ -57,10 +86,11 @@ export default function App() {
       clearAudit();
       clearChat();
       setCurrentRoute(ROUTES.WORKSPACE);
+      showToast(`Contract "${file.name}" successfully parsed & indexed!`, 'success');
       // Auto run audit
       runAudit();
-    } catch {
-      // Handled by hook
+    } catch (err) {
+      showToast(err.message || 'Failed to parse document.', 'error');
     }
   };
 
@@ -70,10 +100,11 @@ export default function App() {
       clearAudit();
       clearChat();
       setCurrentRoute(ROUTES.WORKSPACE);
+      showToast('Benchmark sample contract loaded successfully!', 'success');
       // Auto run audit
       runAudit();
-    } catch {
-      // Handled by hook
+    } catch (err) {
+      showToast(err.message || 'Failed to load benchmark sample.', 'error');
     }
   };
 
@@ -83,18 +114,26 @@ export default function App() {
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      height: '100vh',
+      minHeight: '100vh',
       backgroundColor: 'var(--bg-primary)',
       color: 'var(--text-main)',
-      overflow: 'hidden',
+      overflowX: 'hidden',
     }}>
-      {/* Top Navbar */}
+      {/* Top Accessible Navbar */}
       <Navbar
         currentRoute={currentRoute}
         onNavigate={setCurrentRoute}
         document={document}
-        systemStatus={systemStatus}
       />
+
+      {/* Global Toast Notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
 
       {/* Global Error Banner if any */}
       {activeError && (
@@ -107,15 +146,16 @@ export default function App() {
       )}
 
       {/* Main Page Body */}
-      <main style={{ flex: 1, overflow: 'hidden' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {currentRoute === ROUTES.LANDING && (
-          <div style={{ height: '100%', overflowY: 'auto' }}>
+          <div style={{ flex: 1, overflowY: 'auto' }}>
             <LandingPage onNavigate={setCurrentRoute} onLoadSample={handleLoadSample} />
+            <Footer onNavigate={setCurrentRoute} document={document} />
           </div>
         )}
 
         {currentRoute === ROUTES.UPLOAD && (
-          <div style={{ height: '100%', overflowY: 'auto' }}>
+          <div style={{ flex: 1, overflowY: 'auto' }}>
             <UploadPage
               onFileUpload={handleFileUpload}
               onLoadSample={handleLoadSample}
@@ -123,6 +163,7 @@ export default function App() {
               document={document}
               onNavigate={setCurrentRoute}
             />
+            <Footer onNavigate={setCurrentRoute} document={document} />
           </div>
         )}
 
@@ -132,7 +173,10 @@ export default function App() {
             clauses={clauses}
             analysis={analysis}
             analysisLoading={analysisLoading}
-            onRunAudit={runAudit}
+            onRunAudit={() => {
+              runAudit();
+              showToast('Risk audit updated!', 'success');
+            }}
             chatMessages={chatMessages}
             chatThinking={chatThinking}
             onSendMessage={sendMessage}
@@ -142,7 +186,7 @@ export default function App() {
         )}
 
         {currentRoute === ROUTES.COMPARISON && (
-          <div style={{ height: '100%', overflowY: 'auto' }}>
+          <div style={{ flex: 1, overflowY: 'auto' }}>
             <ComparisonPage
               document={document}
               clauses={clauses}
@@ -152,12 +196,15 @@ export default function App() {
         )}
 
         {currentRoute === ROUTES.BRIEFING && (
-          <div style={{ height: '100%', overflowY: 'auto' }}>
+          <div style={{ flex: 1, overflowY: 'auto' }}>
             <BriefingPage
               document={document}
-              clauses={clauses}
             />
           </div>
+        )}
+
+        {![ROUTES.LANDING, ROUTES.UPLOAD, ROUTES.WORKSPACE, ROUTES.COMPARISON, ROUTES.BRIEFING].includes(currentRoute) && (
+          <NotFoundPage onNavigate={setCurrentRoute} />
         )}
       </main>
     </div>

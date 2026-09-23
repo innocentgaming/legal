@@ -1,8 +1,10 @@
-import React from 'react';
-import { Scale, FileText, UploadCloud, GitCompare, Briefcase } from 'lucide-react';
+import React, { useState } from 'react';
+import { Scale, FileText, UploadCloud, GitCompare, Briefcase, Menu, X } from 'lucide-react';
 import { ROUTES } from '../types/constants';
 
 export default function Navbar({ currentRoute, onNavigate, document }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const navItems = [
     { route: ROUTES.LANDING, label: 'Overview', icon: Scale },
     { route: ROUTES.UPLOAD, label: 'Upload & Ingest', icon: UploadCloud },
@@ -10,6 +12,12 @@ export default function Navbar({ currentRoute, onNavigate, document }) {
     { route: ROUTES.COMPARISON, label: 'Compare Documents', icon: GitCompare },
     { route: ROUTES.BRIEFING, label: 'Lawyer Briefing', icon: Briefcase, disabled: !document },
   ];
+
+  const handleNavClick = (route, disabled) => {
+    if (disabled) return;
+    onNavigate(route);
+    setMobileMenuOpen(false);
+  };
 
   return (
     <header 
@@ -22,15 +30,17 @@ export default function Navbar({ currentRoute, onNavigate, document }) {
         alignItems: 'center',
         justifyContent: 'space-between',
         borderBottom: '1px solid var(--border-subtle)',
+        position: 'relative',
+        zIndex: 100,
       }}
     >
-      {/* Brand & Logo */}
+      {/* Brand & Logo (Clickable with Accessibility) */}
       <div 
-        onClick={() => onNavigate(ROUTES.LANDING)}
+        onClick={() => handleNavClick(ROUTES.LANDING, false)}
         role="button"
         tabIndex={0}
-        aria-label="Clarity Home"
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onNavigate(ROUTES.LANDING); }}
+        aria-label="Clarity AI Legal Co-Pilot — Go to Overview"
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleNavClick(ROUTES.LANDING, false); }}
         style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
       >
         <div style={{
@@ -68,10 +78,11 @@ export default function Navbar({ currentRoute, onNavigate, document }) {
         </div>
       </div>
 
-      {/* Main Navigation Links */}
+      {/* Desktop Navigation Links */}
       <nav 
         role="navigation" 
         aria-label="Main Navigation"
+        className="desktop-nav"
         style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
       >
         {navItems.map((item) => {
@@ -81,7 +92,7 @@ export default function Navbar({ currentRoute, onNavigate, document }) {
           return (
             <button
               key={item.route}
-              onClick={() => !item.disabled && onNavigate(item.route)}
+              onClick={() => handleNavClick(item.route, item.disabled)}
               disabled={item.disabled}
               aria-current={isActive ? 'page' : undefined}
               aria-label={item.label}
@@ -108,15 +119,15 @@ export default function Navbar({ currentRoute, onNavigate, document }) {
         })}
       </nav>
 
-      {/* Right-Side Document Status */}
+      {/* Right-Side Document Status & Mobile Hamburger Toggle */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         {document ? (
           <div 
-            onClick={() => onNavigate(ROUTES.WORKSPACE)}
+            onClick={() => handleNavClick(ROUTES.WORKSPACE, false)}
             role="button"
             tabIndex={0}
             aria-label={`Active document: ${document.filename}`}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onNavigate(ROUTES.WORKSPACE); }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleNavClick(ROUTES.WORKSPACE, false); }}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -136,11 +147,85 @@ export default function Navbar({ currentRoute, onNavigate, document }) {
             </span>
           </div>
         ) : (
-          <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+          <span className="desktop-nav-status" style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
             No document loaded
           </span>
         )}
+
+        {/* Mobile Hamburger Menu Button */}
+        <button
+          className="mobile-menu-toggle"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label={mobileMenuOpen ? 'Close mobile menu' : 'Open mobile menu'}
+          aria-expanded={mobileMenuOpen}
+          style={{
+            display: 'none',
+            background: 'transparent',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '6px',
+            color: 'var(--text-main)',
+            padding: '6px',
+            cursor: 'pointer',
+          }}
+        >
+          {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+        </button>
       </div>
+
+      {/* Mobile Drawer Dropdown Menu */}
+      {mobileMenuOpen && (
+        <div
+          role="dialog"
+          aria-label="Mobile Navigation Menu"
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            marginTop: '8px',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '8px',
+            padding: '12px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+            boxShadow: '0 12px 28px rgba(0, 0, 0, 0.6)',
+            zIndex: 1000,
+          }}
+        >
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = currentRoute === item.route;
+
+            return (
+              <button
+                key={item.route}
+                onClick={() => handleNavClick(item.route, item.disabled)}
+                disabled={item.disabled}
+                aria-current={isActive ? 'page' : undefined}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: isActive ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                  color: isActive ? '#ffffff' : (item.disabled ? 'var(--text-dim)' : 'var(--text-muted)'),
+                  cursor: item.disabled ? 'not-allowed' : 'pointer',
+                  fontSize: '0.86rem',
+                  fontWeight: isActive ? 700 : 500,
+                  textAlign: 'left',
+                }}
+              >
+                <Icon size={16} color={isActive ? "#818cf8" : (item.disabled ? "#475569" : "var(--text-dim)")} aria-hidden="true" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </header>
   );
 }
