@@ -181,6 +181,7 @@ export default function App() {
             chatThinking={chatThinking}
             onSendMessage={sendMessage}
             onNavigate={setCurrentRoute}
+            onLoadSample={handleLoadSample}
             onSelectForRedline={(c) => setSelectedClauseForRedline(c)}
           />
         )}
@@ -199,6 +200,8 @@ export default function App() {
           <div style={{ flex: 1, overflowY: 'auto' }}>
             <BriefingPage
               document={document}
+              onNavigate={setCurrentRoute}
+              onLoadSample={handleLoadSample}
             />
           </div>
         )}

@@ -8,13 +8,12 @@ export default function Navbar({ currentRoute, onNavigate, document }) {
   const navItems = [
     { route: ROUTES.LANDING, label: 'Overview', icon: Scale },
     { route: ROUTES.UPLOAD, label: 'Upload & Ingest', icon: UploadCloud },
-    { route: ROUTES.WORKSPACE, label: 'Workspace', icon: FileText, disabled: !document },
+    { route: ROUTES.WORKSPACE, label: 'Workspace', icon: FileText },
     { route: ROUTES.COMPARISON, label: 'Compare Documents', icon: GitCompare },
-    { route: ROUTES.BRIEFING, label: 'Lawyer Briefing', icon: Briefcase, disabled: !document },
+    { route: ROUTES.BRIEFING, label: 'Lawyer Briefing', icon: Briefcase },
   ];
 
-  const handleNavClick = (route, disabled) => {
-    if (disabled) return;
+  const handleNavClick = (route) => {
     onNavigate(route);
     setMobileMenuOpen(false);
   };

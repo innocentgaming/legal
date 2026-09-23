@@ -25,6 +25,7 @@ export default function WorkspacePage({
   chatThinking,
   onSendMessage,
   onNavigate,
+  onLoadSample,
   onSelectForRedline,
 }) {
   const [activeTab, setActiveTab] = useState('risk'); // 'risk' | 'qa'
@@ -49,6 +50,7 @@ export default function WorkspacePage({
         aria-label="Empty Workspace"
         style={{
           height: '100%',
+          minHeight: '75vh',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -58,30 +60,54 @@ export default function WorkspacePage({
         }}
       >
         <div style={{
-          width: '48px',
-          height: '48px',
-          borderRadius: '12px',
+          width: '56px',
+          height: '56px',
+          borderRadius: '14px',
           background: 'rgba(99, 102, 241, 0.15)',
+          border: '1px solid rgba(99, 102, 241, 0.3)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: '14px',
+          marginBottom: '16px',
         }}>
-          <FileText size={24} color="#818cf8" aria-hidden="true" />
+          <FileText size={28} color="#818cf8" aria-hidden="true" />
         </div>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '6px' }}>
-          No Document Ingested Yet
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '8px' }}>
+          No Document Active in Workspace
         </h2>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '18px', maxWidth: '420px' }}>
-          Please upload a legal agreement or select a benchmark contract to activate the workspace analysis.
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '22px', maxWidth: '440px', lineHeight: '1.5' }}>
+          Please upload a legal agreement or test with a pre-configured benchmark contract to activate the workspace analysis.
         </p>
-        <button 
-          onClick={() => onNavigate(ROUTES.UPLOAD)} 
-          className="btn-primary"
-          aria-label="Upload a contract"
-        >
-          <span>Ingest Contract</span>
-        </button>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
+          <button 
+            onClick={() => onNavigate(ROUTES.UPLOAD)} 
+            className="btn-primary"
+            aria-label="Upload a contract"
+            style={{ padding: '10px 20px' }}
+          >
+            <span>Upload Contract</span>
+          </button>
+          {onLoadSample && (
+            <>
+              <button 
+                onClick={() => onLoadSample('sample_saas_msa')} 
+                className="btn-secondary"
+                style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Sparkles size={16} color="#818cf8" aria-hidden="true" />
+                <span>Test SaaS MSA</span>
+              </button>
+              <button 
+                onClick={() => onLoadSample('sample_nda')} 
+                className="btn-secondary"
+                style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Sparkles size={16} color="#818cf8" aria-hidden="true" />
+                <span>Test Mutual NDA</span>
+              </button>
+            </>
+          )}
+        </div>
       </main>
     );
   }

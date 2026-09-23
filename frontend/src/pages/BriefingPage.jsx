@@ -16,7 +16,9 @@ import {
 import { briefingService } from '../services/contractService';
 import { LoadingState } from '../components/LoadingState';
 
-export default function BriefingPage({ document }) {
+import { ROUTES } from '../types/constants';
+
+export default function BriefingPage({ document, onNavigate, onLoadSample }) {
   const [targetRole, setTargetRole] = useState('General Counsel');
   const [briefingData, setBriefingData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -68,32 +70,97 @@ export default function BriefingPage({ document }) {
 
   if (!document) {
     return (
-      <div style={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px',
-        textAlign: 'center',
-      }}>
+      <main 
+        role="main"
+        aria-label="Lawyer Briefing Preparation"
+        style={{
+          minHeight: '75vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px 20px',
+          textAlign: 'center',
+          maxWidth: '680px',
+          margin: '0 auto',
+        }}
+      >
         <div style={{
-          width: '48px',
-          height: '48px',
-          borderRadius: '12px',
+          width: '56px',
+          height: '56px',
+          borderRadius: '14px',
           background: 'rgba(99, 102, 241, 0.15)',
+          border: '1px solid rgba(99, 102, 241, 0.3)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: '12px',
+          marginBottom: '16px',
         }}>
-          <Briefcase size={24} color="#818cf8" />
+          <Briefcase size={28} color="#818cf8" aria-hidden="true" />
         </div>
-        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '6px' }}>No Document Ingested</h3>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.84rem' }}>
-          Please upload a contract or select a benchmark sample to generate a 10-section lawyer preparation briefing.
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '8px', color: 'var(--text-main)' }}>
+          Lawyer Consultation Briefing
+        </h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: '1.55', marginBottom: '24px' }}>
+          Generate a structured, 10-section briefing dossier for your legal counsel with exact clause citations, negotiation levers, and targeted questions before your consultation.
         </p>
-      </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+          {onNavigate && (
+            <button 
+              onClick={() => onNavigate(ROUTES.UPLOAD)} 
+              className="btn-primary"
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px' }}
+            >
+              <span>Upload Your Contract</span>
+            </button>
+          )}
+
+          {onLoadSample && (
+            <>
+              <button 
+                onClick={() => onLoadSample('sample_saas_msa')}
+                className="btn-secondary"
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px' }}
+              >
+                <Sparkles size={16} color="#818cf8" aria-hidden="true" />
+                <span>Test with SaaS MSA Sample</span>
+              </button>
+              <button 
+                onClick={() => onLoadSample('sample_nda')}
+                className="btn-secondary"
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px' }}
+              >
+                <Sparkles size={16} color="#818cf8" aria-hidden="true" />
+                <span>Test with Mutual NDA Sample</span>
+              </button>
+            </>
+          )}
+        </div>
+
+        <div className="glass-panel" style={{
+          padding: '16px 20px',
+          width: '100%',
+          textAlign: 'left',
+          borderRadius: '10px',
+          border: '1px solid var(--border-subtle)',
+          background: 'rgba(15, 23, 42, 0.4)',
+        }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#a5b4fc', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+            What’s in the 10-Section Dossier:
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '6px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            <div>✓ Executive Summary</div>
+            <div>✓ Critical Red Flags</div>
+            <div>✓ Questions for Counsel</div>
+            <div>✓ Negotiation Levers</div>
+            <div>✓ Missing Clauses</div>
+            <div>✓ Exact Clause Citations</div>
+            <div>✓ Favorable Terms</div>
+            <div>✓ Markdown & PDF Export</div>
+          </div>
+        </div>
+      </main>
     );
   }
 
