@@ -71,18 +71,19 @@ class SimplificationService:
 
     @classmethod
     async def _simplify_with_gemini(cls, clause_text: str, title: str, category: str) -> Dict[str, Any]:
+        from backend.app.core.security import SecurityService
+
+        framed = SecurityService.format_prompt_with_injection_defense(
+            system_instructions=SIMPLIFICATION_SYSTEM_PROMPT,
+            user_question_or_task=f"Analyze, explain, and simplify this legal clause.\nTITLE: {title or 'Clause'}\nCATEGORY: {category or 'General'}",
+            untrusted_document_content=clause_text,
+            context_label="TARGET_CLAUSE"
+        )
+
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.GEMINI_MODEL}:generateContent?key={settings.GEMINI_API_KEY}"
-        user_prompt = f"""Analyze and simplify this legal clause:
-TITLE: {title or 'Clause'}
-CATEGORY: {category or 'General'}
-ORIGINAL CLAUSE TEXT:
-\"\"\"{clause_text}\"\"\"
-
-Return raw JSON only."""
-
         payload = {
-            "system_instruction": {"parts": [{"text": SIMPLIFICATION_SYSTEM_PROMPT}]},
-            "contents": [{"parts": [{"text": user_prompt}]}],
+            "system_instruction": {"parts": [{"text": framed["system_instruction"]}]},
+            "contents": [{"parts": [{"text": framed["user_content"]}]}],
             "generationConfig": {
                 "temperature": 0.1,
                 "responseMimeType": "application/json"
@@ -99,19 +100,25 @@ Return raw JSON only."""
 
     @classmethod
     async def _simplify_with_openai(cls, clause_text: str, title: str, category: str) -> Dict[str, Any]:
+        from backend.app.core.security import SecurityService
+
+        framed = SecurityService.format_prompt_with_injection_defense(
+            system_instructions=SIMPLIFICATION_SYSTEM_PROMPT,
+            user_question_or_task=f"Analyze, explain, and simplify this legal clause.\nTITLE: {title or 'Clause'}\nCATEGORY: {category or 'General'}",
+            untrusted_document_content=clause_text,
+            context_label="TARGET_CLAUSE"
+        )
+
         url = "https://api.openai.com/v1/chat/completions"
-        user_prompt = f"""TITLE: {title or 'Clause'}\nCATEGORY: {category or 'General'}\nORIGINAL CLAUSE TEXT:\n\"\"\"{clause_text}\"\"\""""
-        
         headers = {
             "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
             "Content-Type": "application/json"
         }
-        
         payload = {
             "model": settings.OPENAI_MODEL,
             "messages": [
-                {"role": "system", "content": SIMPLIFICATION_SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt}
+                {"role": "system", "content": framed["system_instruction"]},
+                {"role": "user", "content": framed["user_content"]}
             ],
             "temperature": 0.1,
             "response_format": {"type": "json_object"}

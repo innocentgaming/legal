@@ -15,32 +15,39 @@ class DocumentParserService:
 
     @classmethod
     def parse(cls, filename: str, content: bytes) -> Dict[str, Any]:
-        if not content or len(content.strip()) == 0:
+        from backend.app.core.security import SecurityService
+        
+        # 1. Strict security validation (size, magic bytes, executable rejection, path traversal)
+        is_valid, safe_filename, error_msg = SecurityService.validate_file_upload(filename, content)
+        if not is_valid:
             raise DocumentProcessingError(
-                f"Document '{filename}' is empty.", 
-                details={"filename": filename, "reason": "empty_file"}
+                error_msg, 
+                details={"filename": safe_filename, "reason": "security_validation_failed"}
             )
 
-        ext = os.path.splitext(filename)[1].lower()
-        if ext not in [".pdf", ".docx", ".doc", ".txt", ".md"]:
-            raise DocumentProcessingError(
-                f"Unsupported file format '{ext}'. Allowed: PDF, DOCX, TXT.",
-                details={"filename": filename, "extension": ext}
-            )
+        ext = os.path.splitext(safe_filename)[1].lower()
 
         try:
             if ext == ".pdf":
-                result = cls._parse_pdf(content, filename)
+                result = cls._parse_pdf(content, safe_filename)
             elif ext in [".docx", ".doc"]:
-                result = cls._parse_docx(content, filename)
+                result = cls._parse_docx(content, safe_filename)
             else:
-                result = cls._parse_text(content, filename)
+                result = cls._parse_text(content, safe_filename)
+
+            # Sanitize extracted raw text
+            if "raw_text" in result:
+                result["raw_text"] = SecurityService.sanitize_extracted_text(result["raw_text"])
+
+            for page in result.get("pages", []):
+                if "text" in page:
+                    page["text"] = SecurityService.sanitize_extracted_text(page["text"])
 
             # Check if extracted text is empty
             if not result.get("raw_text", "").strip():
                 raise DocumentProcessingError(
-                    f"No extractable text found in '{filename}'.",
-                    details={"filename": filename, "reason": "no_text_extracted"}
+                    f"No extractable text found in '{safe_filename}'.",
+                    details={"filename": safe_filename, "reason": "no_text_extracted"}
                 )
 
             return result
@@ -48,8 +55,8 @@ class DocumentParserService:
             raise
         except Exception as e:
             raise DocumentProcessingError(
-                f"Failed to parse document '{filename}': {str(e)}", 
-                details={"filename": filename, "error": str(e)}
+                f"Failed to parse document '{safe_filename}': {str(e)}", 
+                details={"filename": safe_filename, "error": str(e)}
             )
 
     @classmethod

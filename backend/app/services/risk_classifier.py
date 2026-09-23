@@ -401,7 +401,8 @@ class RiskClassifierService:
 
     @classmethod
     async def _classify_with_gemini(cls, clauses: List[Dict[str, Any]], filename: str) -> Optional[List[Dict[str, Any]]]:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.GEMINI_MODEL}:generateContent?key={settings.GEMINI_API_KEY}"
+        from backend.app.core.security import SecurityService
+
         clause_payload = [
             {
                 "clause_id": c.get("clause_id") or c.get("id"),
@@ -411,11 +412,17 @@ class RiskClassifierService:
             for c in clauses[:30]
         ]
         
-        user_prompt = f"""Audit these clauses from contract '{filename}':\n{json.dumps(clause_payload, indent=2)}\n\nReturn structured JSON array of risk evaluations."""
+        framed = SecurityService.format_prompt_with_injection_defense(
+            system_instructions=RISK_CLASSIFICATION_SYSTEM_PROMPT,
+            user_question_or_task=f"Audit and classify contractual risk for clauses from contract '{filename}'. Return structured JSON array of risk evaluations.",
+            untrusted_document_content=json.dumps(clause_payload, indent=2),
+            context_label="CONTRACT_CLAUSES_FOR_AUDIT"
+        )
 
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.GEMINI_MODEL}:generateContent?key={settings.GEMINI_API_KEY}"
         payload = {
-            "system_instruction": {"parts": [{"text": RISK_CLASSIFICATION_SYSTEM_PROMPT}]},
-            "contents": [{"parts": [{"text": user_prompt}]}],
+            "system_instruction": {"parts": [{"text": framed["system_instruction"]}]},
+            "contents": [{"parts": [{"text": framed["user_content"]}]}],
             "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json"}
         }
 
@@ -428,7 +435,8 @@ class RiskClassifierService:
 
     @classmethod
     async def _classify_with_openai(cls, clauses: List[Dict[str, Any]], filename: str) -> Optional[List[Dict[str, Any]]]:
-        url = "https://api.openai.com/v1/chat/completions"
+        from backend.app.core.security import SecurityService
+
         clause_payload = [
             {
                 "clause_id": c.get("clause_id") or c.get("id"),
@@ -438,12 +446,20 @@ class RiskClassifierService:
             for c in clauses[:30]
         ]
 
+        framed = SecurityService.format_prompt_with_injection_defense(
+            system_instructions=RISK_CLASSIFICATION_SYSTEM_PROMPT,
+            user_question_or_task=f"Audit and classify contractual risk for clauses from contract '{filename}'. Return structured JSON array of risk evaluations.",
+            untrusted_document_content=json.dumps(clause_payload, indent=2),
+            context_label="CONTRACT_CLAUSES_FOR_AUDIT"
+        )
+
+        url = "https://api.openai.com/v1/chat/completions"
         headers = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}", "Content-Type": "application/json"}
         payload = {
             "model": settings.OPENAI_MODEL,
             "messages": [
-                {"role": "system", "content": RISK_CLASSIFICATION_SYSTEM_PROMPT},
-                {"role": "user", "content": f"Audit {filename}:\n{json.dumps(clause_payload)}"}
+                {"role": "system", "content": framed["system_instruction"]},
+                {"role": "user", "content": framed["user_content"]}
             ],
             "temperature": 0.1,
             "response_format": {"type": "json_object"}

@@ -119,3 +119,17 @@ async def simplify_clause_endpoint(clause_id: str):
     target.update(res)
     return target
 
+@router.delete("/documents/current")
+@router.delete("/contracts/current")
+@router.post("/session/clear")
+async def clear_current_session():
+    """
+    Clears all active session-scoped document data, vector store indices,
+    and cached in-memory structures. Guarantees zero persistent storage.
+    """
+    ingestion_service.reset_session()
+    return {
+        "status": "success",
+        "message": "Session data cleared successfully. Zero document contents retained."
+    }
+

@@ -21,7 +21,19 @@ class LLMServiceError(ClarityException):
         super().__init__(message=message, status_code=502, details=details)
 
 async def clarity_exception_handler(request: Request, exc: ClarityException):
-    logger.error(f"ClarityException on {request.url.path}: {exc.message} | {exc.details}")
+    from backend.app.core.security import SecurityService
+    sanitized_details = {}
+    if exc.details and isinstance(exc.details, dict):
+        for k, v in exc.details.items():
+            # Never log raw text/content payloads in logs
+            if k in ["raw_text", "content", "document_text", "clause_text", "text"]:
+                sanitized_details[k] = "[DOCUMENT_CONTENT_REDACTED]"
+            else:
+                sanitized_details[k] = SecurityService.redact_sensitive_log(str(v)[:200])
+
+    log_msg = SecurityService.redact_sensitive_log(f"ClarityException on {request.url.path}: {exc.message} | {sanitized_details}")
+    logger.error(log_msg)
+
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -33,13 +45,15 @@ async def clarity_exception_handler(request: Request, exc: ClarityException):
     )
 
 async def generic_exception_handler(request: Request, exc: Exception):
-    logger.exception(f"Unhandled error on {request.url.path}: {str(exc)}")
+    from backend.app.core.security import SecurityService
+    sanitized_error = SecurityService.redact_sensitive_log(str(exc)[:300])
+    logger.error(f"Unhandled error on {request.url.path}: {sanitized_error}")
     return JSONResponse(
         status_code=500,
         content={
             "status": "error",
             "error_type": "InternalServerError",
             "message": "An unexpected error occurred while processing your legal request.",
-            "details": str(exc) if True else None
+            "details": sanitized_error if not str(exc).startswith("<") else "Processing error"
         }
     )

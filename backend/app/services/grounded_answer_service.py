@@ -167,12 +167,20 @@ class GroundedAnswerService:
 
     @classmethod
     async def _answer_with_gemini(cls, query: str, context_str: str, chunks: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.GEMINI_MODEL}:generateContent?key={settings.GEMINI_API_KEY}"
-        user_prompt = f"""CONTEXT EXCERPTS FROM UPLOADED CONTRACT:\n{context_str}\n\nUSER QUESTION:\n{query}\n\nReturn JSON only."""
+        from backend.app.core.security import SecurityService
+        
+        # Enforce Security Hierarchy: SYSTEM INSTRUCTIONS > USER QUESTION > RETRIEVED DOCUMENT CONTENT
+        framed = SecurityService.format_prompt_with_injection_defense(
+            system_instructions=GROUNDED_QA_SYSTEM_PROMPT,
+            user_question_or_task=query,
+            untrusted_document_content=context_str,
+            context_label="RETRIEVED_CONTRACT_EXCERPTS"
+        )
 
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.GEMINI_MODEL}:generateContent?key={settings.GEMINI_API_KEY}"
         payload = {
-            "system_instruction": {"parts": [{"text": GROUNDED_QA_SYSTEM_PROMPT}]},
-            "contents": [{"parts": [{"text": user_prompt}]}],
+            "system_instruction": {"parts": [{"text": framed["system_instruction"]}]},
+            "contents": [{"parts": [{"text": framed["user_content"]}]}],
             "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json"}
         }
 
@@ -186,15 +194,23 @@ class GroundedAnswerService:
 
     @classmethod
     async def _answer_with_openai(cls, query: str, context_str: str, chunks: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-        url = "https://api.openai.com/v1/chat/completions"
-        user_prompt = f"""CONTEXT EXCERPTS FROM UPLOADED CONTRACT:\n{context_str}\n\nUSER QUESTION:\n{query}"""
+        from backend.app.core.security import SecurityService
 
+        # Enforce Security Hierarchy: SYSTEM INSTRUCTIONS > USER QUESTION > RETRIEVED DOCUMENT CONTENT
+        framed = SecurityService.format_prompt_with_injection_defense(
+            system_instructions=GROUNDED_QA_SYSTEM_PROMPT,
+            user_question_or_task=query,
+            untrusted_document_content=context_str,
+            context_label="RETRIEVED_CONTRACT_EXCERPTS"
+        )
+
+        url = "https://api.openai.com/v1/chat/completions"
         headers = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}", "Content-Type": "application/json"}
         payload = {
             "model": settings.OPENAI_MODEL,
             "messages": [
-                {"role": "system", "content": GROUNDED_QA_SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt}
+                {"role": "system", "content": framed["system_instruction"]},
+                {"role": "user", "content": framed["user_content"]}
             ],
             "temperature": 0.1,
             "response_format": {"type": "json_object"}
