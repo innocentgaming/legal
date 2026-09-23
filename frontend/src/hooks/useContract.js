@@ -45,6 +45,17 @@ export function useContract() {
     setError(null);
   }, []);
 
+  const setDocumentState = useCallback((docData) => {
+    if (!docData) return;
+    setDocument({
+      filename: docData.filename,
+      char_count: docData.char_count,
+      clause_count: docData.clause_count || docData.clauses?.length || 0,
+    });
+    setClauses(docData.clauses || []);
+    setError(null);
+  }, []);
+
   return {
     document,
     clauses,
@@ -54,5 +65,6 @@ export function useContract() {
     uploadDocument,
     loadSampleDocument,
     resetDocument,
+    setDocumentState,
   };
 }

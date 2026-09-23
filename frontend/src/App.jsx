@@ -8,18 +8,26 @@ import ComparisonPage from './pages/ComparisonPage';
 import BriefingPage from './pages/BriefingPage';
 import NotFoundPage from './pages/NotFoundPage';
 import Toast from './components/Toast';
+import AuthModal from './components/AuthModal';
+import SavedContractsModal from './components/SavedContractsModal';
 import { ErrorAlert } from './components/LoadingState';
 
 import { useContract } from './hooks/useContract';
 import { useRiskAudit } from './hooks/useRiskAudit';
 import { useChat } from './hooks/useChat';
 import { contractService } from './services/contractService';
+import { authService } from './services/authService';
 import { ROUTES } from './types/constants';
 
 export default function App() {
   const [currentRoute, setCurrentRoute] = useState(ROUTES.LANDING);
   const [selectedClauseForRedline, setSelectedClauseForRedline] = useState(null);
   const [toast, setToast] = useState(null); // { message, type }
+
+  // Authentication & Modals State
+  const [currentUser, setCurrentUser] = useState(() => authService.getCurrentUser());
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [savedModalOpen, setSavedModalOpen] = useState(false);
 
   const {
     document,
@@ -29,6 +37,7 @@ export default function App() {
     setError: setContractError,
     uploadDocument,
     loadSampleDocument,
+    setDocumentState,
   } = useContract();
 
   const {
@@ -47,10 +56,16 @@ export default function App() {
     clearChat,
   } = useChat();
 
-  // Load system status on mount
+  // Load system status & verify auth token on mount
   useEffect(() => {
     contractService.getSystemStatus()
       .catch((err) => console.warn('Backend status check:', err.message));
+
+    if (authService.getToken()) {
+      authService.getProfile()
+        .then((user) => { if (user) setCurrentUser(user); })
+        .catch(() => setCurrentUser(null));
+    }
   }, []);
 
   // Update dynamic page title on route change
@@ -78,6 +93,46 @@ export default function App() {
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
+  };
+
+  const handleAuthSuccess = (user) => {
+    setCurrentUser(user);
+    showToast(`Welcome, ${user.name}! You are now signed in.`, 'success');
+  };
+
+  const handleLogout = () => {
+    authService.clearSession();
+    setCurrentUser(null);
+    showToast('Signed out successfully. Switched to Guest Mode.', 'info');
+  };
+
+  const handleSaveActiveContract = async () => {
+    if (!document) {
+      showToast('No active contract to save.', 'error');
+      return;
+    }
+    if (!currentUser) {
+      setAuthModalOpen(true);
+      return;
+    }
+    try {
+      await authService.saveActiveContract();
+      showToast(`Contract "${document.filename}" saved to your library!`, 'success');
+    } catch (err) {
+      showToast(err.message || 'Failed to save contract.', 'error');
+    }
+  };
+
+  const handleLoadSavedContract = (loadedDoc) => {
+    clearAudit();
+    clearChat();
+    // Re-synchronize active document state
+    if (setDocumentState) {
+      setDocumentState(loadedDoc);
+    }
+    setCurrentRoute(ROUTES.WORKSPACE);
+    // Trigger risk audit
+    runAudit();
   };
 
   const handleFileUpload = async (file) => {
@@ -124,6 +179,25 @@ export default function App() {
         currentRoute={currentRoute}
         onNavigate={setCurrentRoute}
         document={document}
+        currentUser={currentUser}
+        onOpenAuthModal={() => setAuthModalOpen(true)}
+        onOpenSavedModal={() => setSavedModalOpen(true)}
+        onLogout={handleLogout}
+      />
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onAuthSuccess={handleAuthSuccess}
+      />
+
+      {/* Saved Contracts Library Modal */}
+      <SavedContractsModal
+        isOpen={savedModalOpen}
+        onClose={() => setSavedModalOpen(false)}
+        onLoadSavedContract={handleLoadSavedContract}
+        showToast={showToast}
       />
 
       {/* Global Toast Notifications */}
@@ -182,6 +256,7 @@ export default function App() {
             onSendMessage={sendMessage}
             onNavigate={setCurrentRoute}
             onLoadSample={handleLoadSample}
+            onSaveContract={handleSaveActiveContract}
             onSelectForRedline={(c) => setSelectedClauseForRedline(c)}
           />
         )}

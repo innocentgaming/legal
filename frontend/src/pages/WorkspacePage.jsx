@@ -10,6 +10,7 @@ import {
   Clock, 
   Copy, 
   Check, 
+  FolderLock,
 } from 'lucide-react';
 import RiskPanel from '../components/RiskPanel';
 import QAPanel from '../components/QAPanel';
@@ -26,6 +27,7 @@ export default function WorkspacePage({
   onSendMessage,
   onNavigate,
   onLoadSample,
+  onSaveContract,
   onSelectForRedline,
 }) {
   const [activeTab, setActiveTab] = useState('risk'); // 'risk' | 'qa'
@@ -382,6 +384,19 @@ export default function WorkspacePage({
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {onSaveContract && (
+                  <button
+                    onClick={onSaveContract}
+                    className="btn-secondary"
+                    style={{ padding: '4px 10px', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(99, 102, 241, 0.12)', borderColor: 'rgba(99, 102, 241, 0.3)', color: '#a5b4fc' }}
+                    aria-label="Save contract to library"
+                    title="Save this contract to your library"
+                  >
+                    <FolderLock size={12} color="#818cf8" />
+                    <span>Save Contract</span>
+                  </button>
+                )}
+
                 <button
                   onClick={() => handleCopyClause(activeClause.original_text || activeClause.text || '')}
                   className="btn-secondary"
