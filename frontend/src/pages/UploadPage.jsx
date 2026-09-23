@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { UploadCloud, FileText, CheckCircle2, Lock, Zap, ArrowRight } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, ArrowRight } from 'lucide-react';
 import { SAMPLE_DOCUMENTS, ROUTES } from '../types/constants';
 import { LoadingState } from '../components/LoadingState';
 
@@ -28,41 +28,49 @@ export default function UploadPage({
   };
 
   return (
-    <div style={{
-      maxWidth: '900px',
-      margin: '20px auto',
-      padding: '0 20px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '28px',
-    }}>
+    <main 
+      role="main"
+      aria-label="Upload Contract Document"
+      style={{
+        maxWidth: '920px',
+        margin: '16px auto',
+        padding: '0 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px',
+      }}
+    >
       <div style={{ textAlign: 'center' }}>
-        <h2 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '6px' }}>
+        <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '6px', color: 'var(--text-main)' }}>
           Ingest Legal Contract
-        </h2>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          Supports <strong>PDF</strong> (via PDFPlumber layout extraction), <strong>DOCX</strong> (via Mammoth), and <strong>Plain Text</strong>.
+        </h1>
+        <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
+          Supports <strong>PDF</strong> (layout preserved), <strong>DOCX</strong>, and <strong>Plain Text</strong> files up to 25MB.
         </p>
       </div>
 
       {loading ? (
-        <div className="glass-panel" style={{ padding: '40px' }}>
-          <LoadingState message="Parsing layout, segmenting clauses & indexing vector store..." size="large" />
+        <div className="glass-panel" style={{ padding: '36px' }} aria-live="polite">
+          <LoadingState message="Extracting layout, segmenting clauses & indexing vector store..." size="large" />
         </div>
       ) : (
         <div
+          role="button"
+          tabIndex={0}
+          aria-label="Click to browse files or drag and drop a contract"
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
           onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
           onDragLeave={(e) => { e.preventDefault(); setIsDragOver(false); }}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
           className="glass-panel"
           style={{
-            padding: '44px 20px',
+            padding: '40px 20px',
             textAlign: 'center',
             cursor: 'pointer',
-            border: isDragOver ? '2px dashed #6366f1' : '2px dashed rgba(255, 255, 255, 0.15)',
-            backgroundColor: isDragOver ? 'rgba(99, 102, 241, 0.08)' : 'var(--bg-glass)',
-            transition: 'all 0.2s ease',
+            border: isDragOver ? '2px dashed #818cf8' : '2px dashed var(--border-subtle)',
+            backgroundColor: isDragOver ? 'rgba(99, 102, 241, 0.08)' : 'var(--bg-secondary)',
+            transition: 'border-color 0.15s ease',
           }}
         >
           <input
@@ -71,26 +79,26 @@ export default function UploadPage({
             onChange={handleFileChange}
             accept=".pdf,.docx,.doc,.txt,.md"
             style={{ display: 'none' }}
+            aria-hidden="true"
           />
 
           <div style={{
-            width: '56px',
-            height: '56px',
-            margin: '0 auto 16px auto',
-            borderRadius: '14px',
-            background: 'rgba(99, 102, 241, 0.15)',
-            border: '1px solid rgba(99, 102, 241, 0.3)',
+            width: '52px',
+            height: '52px',
+            margin: '0 auto 14px auto',
+            borderRadius: '10px',
+            background: 'rgba(99, 102, 241, 0.12)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-            <UploadCloud size={28} color="#818cf8" />
+            <UploadCloud size={26} color="#818cf8" aria-hidden="true" />
           </div>
 
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '4px' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '4px', color: 'var(--text-main)' }}>
             Click to upload or drag & drop contract
-          </h3>
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '14px' }}>
+          </h2>
+          <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginBottom: '14px' }}>
             PDF, DOCX, TXT up to 25MB
           </p>
 
@@ -102,73 +110,83 @@ export default function UploadPage({
         </div>
       )}
 
-      {/* Active Document Notification if loaded */}
+      {/* Active Document Status */}
       {document && (
-        <div className="glass-panel" style={{
-          padding: '14px 20px',
+        <section aria-label="Active Document Status" className="glass-panel" style={{
+          padding: '12px 18px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          border: '1px solid rgba(16, 185, 129, 0.3)',
-          background: 'rgba(16, 185, 129, 0.05)',
+          border: '1px solid var(--risk-low-border)',
+          background: 'var(--risk-low-bg)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <CheckCircle2 size={20} color="#10b981" />
+            <CheckCircle2 size={18} color="#34d399" aria-hidden="true" />
             <div>
-              <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{document.filename}</div>
+              <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#f8fafc' }}>{document.filename}</div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                 {document.clause_count} clauses parsed • {document.total_words} words
               </div>
             </div>
           </div>
 
-          <button onClick={() => onNavigate(ROUTES.WORKSPACE)} className="btn-primary" style={{ fontSize: '0.8rem', padding: '6px 14px' }}>
-            <span>Go to Workspace</span>
-            <ArrowRight size={14} />
+          <button 
+            onClick={() => onNavigate(ROUTES.WORKSPACE)} 
+            className="btn-primary" 
+            style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+            aria-label="Proceed to Document Workspace"
+          >
+            <span>Open Workspace</span>
+            <ArrowRight size={13} aria-hidden="true" />
           </button>
-        </div>
+        </section>
       )}
 
-      {/* 1-Click Samples */}
-      <div>
-        <div style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '12px' }}>
-          Or load a benchmark contract:
-        </div>
+      {/* 1-Click Samples Section */}
+      <section aria-labelledby="benchmarks-heading">
+        <h2 id="benchmarks-heading" style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-dim)', marginBottom: '10px' }}>
+          Or load a benchmark agreement:
+        </h2>
 
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-          gap: '12px',
+          gap: '10px',
         }}>
           {SAMPLE_DOCUMENTS.map((sample) => (
-            <div
+            <button
               key={sample.id}
               onClick={() => onLoadSample(sample.id)}
               className="glass-panel"
               style={{
-                padding: '14px',
+                padding: '12px 14px',
                 cursor: 'pointer',
+                textAlign: 'left',
                 border: '1px solid var(--border-subtle)',
+                background: 'var(--bg-secondary)',
+                color: 'inherit',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--border-hover)')}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-subtle)')}
+              aria-label={`Load benchmark ${sample.name}`}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <FileText size={16} color="#818cf8" />
-                  <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{sample.name}</span>
+                  <FileText size={15} color="#818cf8" aria-hidden="true" />
+                  <span style={{ fontWeight: 700, fontSize: '0.84rem', color: 'var(--text-main)' }}>{sample.name}</span>
                 </div>
                 <span className={sample.risk === 'High' ? 'badge-high' : (sample.risk === 'Medium' ? 'badge-med' : 'badge-low')}>
-                  {sample.risk} Risk
+                  {sample.risk.toUpperCase()} RISK
                 </span>
               </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+              <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', lineHeight: '1.4', margin: 0 }}>
                 {sample.description}
               </p>
-            </div>
+            </button>
           ))}
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

@@ -111,7 +111,7 @@ export default function App() {
       <main style={{ flex: 1, overflow: 'hidden' }}>
         {currentRoute === ROUTES.LANDING && (
           <div style={{ height: '100%', overflowY: 'auto' }}>
-            <LandingPage onNavigate={setCurrentRoute} />
+            <LandingPage onNavigate={setCurrentRoute} onLoadSample={handleLoadSample} />
           </div>
         )}
 

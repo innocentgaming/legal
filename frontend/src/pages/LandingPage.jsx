@@ -1,125 +1,242 @@
 import React from 'react';
-import { Scale, ShieldCheck, Sparkles, Zap, Lock, ArrowRight, FileText, GitCompare, Briefcase } from 'lucide-react';
+import { 
+  FileText, 
+  ShieldCheck, 
+  MessageSquare, 
+  GitCompare, 
+  Briefcase, 
+  ArrowRight, 
+  FileCheck2, 
+  Building, 
+  UserCheck, 
+  Lock, 
+  Layers
+} from 'lucide-react';
 import { ROUTES } from '../types/constants';
 
-export default function LandingPage({ onNavigate }) {
+export default function LandingPage({ onNavigate, onLoadSample }) {
+  const exampleContracts = [
+    {
+      id: 'lease-commercial',
+      title: 'Commercial Lease',
+      category: 'Lease',
+      desc: 'Standard commercial property lease covering base rent, maintenance covenants, and use restrictions.',
+      icon: Building,
+      sampleId: 'commercial-lease'
+    },
+    {
+      id: 'employment-exec',
+      title: 'Employment Contract',
+      category: 'Employment Contract',
+      desc: 'Executive offer agreement with post-termination non-compete and IP assignment provisions.',
+      icon: UserCheck,
+      sampleId: 'employment-contract'
+    },
+    {
+      id: 'nda-mutual',
+      title: 'Non-Disclosure Agreement',
+      category: 'NDA',
+      desc: 'Mutual confidentiality and trade secret protection agreement with defined disclosure exclusions.',
+      icon: Lock,
+      sampleId: 'nda-mutual'
+    },
+    {
+      id: 'vendor-msa',
+      title: 'Vendor Agreement',
+      category: 'Vendor Agreement',
+      desc: 'Master Services Agreement (MSA) with liability limitations, IP warranties, and termination windows.',
+      icon: FileCheck2,
+      sampleId: 'saas-msa'
+    }
+  ];
+
+  const workflowSteps = [
+    { num: '01', title: 'Upload & Parse', desc: 'Structure-preserving PDF, DOCX, & TXT ingestion.' },
+    { num: '02', title: 'Clause Simplification', desc: 'Plain-language summaries, rights & obligations.' },
+    { num: '03', title: 'Risk Classification', desc: 'Deterministic & contextual pattern audits.' },
+    { num: '04', title: 'Grounded Q&A', desc: 'Strict factual answers with exact clause citations.' },
+    { num: '05', title: 'Document Comparison', desc: 'Semantic two-column version alignment.' },
+    { num: '06', title: 'Lawyer Briefing', desc: '10-section one-page consultation summary.' },
+  ];
+
   return (
     <div style={{
-      maxWidth: '1000px',
-      margin: '24px auto',
-      padding: '0 20px',
+      maxWidth: '1080px',
+      margin: '0 auto',
+      padding: '24px 20px 48px',
       display: 'flex',
       flexDirection: 'column',
       gap: '36px',
     }}>
-      {/* Hero */}
-      <div style={{ textAlign: 'center', paddingTop: '20px' }}>
+      {/* Hero Section */}
+      <section 
+        aria-label="Clarity Legal Document Assistant Introduction"
+        style={{
+          textAlign: 'center',
+          paddingTop: '28px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}
+      >
         <div style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '8px',
+          gap: '6px',
           background: 'rgba(99, 102, 241, 0.12)',
-          border: '1px solid rgba(99, 102, 241, 0.35)',
-          borderRadius: '999px',
-          padding: '6px 16px',
-          fontSize: '0.8rem',
+          border: '1px solid rgba(99, 102, 241, 0.3)',
+          borderRadius: '20px',
+          padding: '4px 12px',
+          fontSize: '0.74rem',
+          fontWeight: 700,
           color: '#a5b4fc',
-          marginBottom: '16px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.04em',
+          marginBottom: '14px',
         }}>
-          <Sparkles size={14} color="#818cf8" />
-          <span>Clarity AI Legal Co-Pilot — Phase 1 Production Shell</span>
+          Professional Legal Document Intelligence
         </div>
 
+        {/* Phase 8 Exact Required Headline */}
         <h1 style={{
-          fontSize: '2.8rem',
+          fontSize: '2.5rem',
           fontWeight: 800,
-          letterSpacing: '-0.03em',
-          background: 'linear-gradient(135deg, #ffffff 40%, #94a3b8 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
+          lineHeight: '1.2',
+          letterSpacing: '-0.02em',
+          color: 'var(--text-main)',
+          maxWidth: '780px',
           marginBottom: '14px',
-          lineHeight: '1.15',
         }}>
-          Contract Intelligence. Risk Auditing. Grounded RAG.
+          Understand your legal documents before you talk to a lawyer.
         </h1>
 
+        {/* Phase 8 Exact Required Subheading */}
         <p style={{
           fontSize: '1.05rem',
           color: 'var(--text-muted)',
-          maxWidth: '680px',
-          margin: '0 auto 24px auto',
-          lineHeight: '1.6',
+          maxWidth: '640px',
+          lineHeight: '1.55',
+          marginBottom: '24px',
         }}>
-          A lightweight, modular legal analysis engine with PDF/DOCX ingestion, in-memory hybrid vector search, and citation-backed legal intelligence.
+          Clarity helps you understand, question, compare and prepare.
         </p>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+        {/* Phase 8 Exact Required CTA */}
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
           <button
             onClick={() => onNavigate(ROUTES.UPLOAD)}
             className="btn-primary"
-            style={{ padding: '10px 22px', fontSize: '0.9rem' }}
+            aria-label="Analyze a document"
+            style={{ padding: '10px 24px', fontSize: '0.92rem' }}
           >
-            <span>Get Started / Upload Contract</span>
-            <ArrowRight size={16} />
-          </button>
-
-          <button
-            onClick={() => onNavigate(ROUTES.COMPARISON)}
-            className="btn-secondary"
-            style={{ padding: '10px 18px', fontSize: '0.9rem' }}
-          >
-            <GitCompare size={16} />
-            <span>Document Comparator</span>
+            <span>Analyze a document</span>
+            <ArrowRight size={16} aria-hidden="true" />
           </button>
         </div>
-      </div>
+      </section>
 
-      {/* 4 Feature Pillars */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '16px',
-      }}>
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
-            <FileText size={20} color="#818cf8" />
-          </div>
-          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '6px' }}>Document Workspace</h3>
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: '1.45' }}>
-            Interactive clause segmentation with search filters and structural hierarchy preservation.
-          </p>
+      {/* Example Contracts Section */}
+      <section aria-labelledby="examples-heading" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h2 id="examples-heading" style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>
+            Sample Contract Benchmarks
+          </h2>
+          <span style={{ fontSize: '0.74rem', color: 'var(--text-dim)' }}>
+            Click any agreement to test instant document analysis
+          </span>
         </div>
 
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
-            <ShieldCheck size={20} color="#ef4444" />
-          </div>
-          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '6px' }}>Risk Audit Panel</h3>
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: '1.45' }}>
-            Automated scoring for uncapped liabilities, one-sided indemnity, and missing protective terms.
-          </p>
-        </div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+          gap: '12px',
+        }}>
+          {exampleContracts.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  if (onLoadSample) {
+                    onLoadSample(item.sampleId);
+                  } else {
+                    onNavigate(ROUTES.UPLOAD);
+                  }
+                }}
+                className="glass-panel"
+                style={{
+                  padding: '16px',
+                  textAlign: 'left',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  border: '1px solid var(--border-subtle)',
+                  background: 'var(--bg-secondary)',
+                  color: 'inherit',
+                  transition: 'border-color 0.15s ease'
+                }}
+                aria-label={`Analyze sample ${item.title}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '6px',
+                    background: 'rgba(99, 102, 241, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <Icon size={16} color="#818cf8" aria-hidden="true" />
+                  </div>
+                  <span className="badge-neutral" style={{ fontSize: '0.66rem' }}>{item.category}</span>
+                </div>
 
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
-            <GitCompare size={20} color="#06b6d4" />
-          </div>
-          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '6px' }}>Clause Comparison</h3>
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: '1.45' }}>
-            Side-by-side contract diffing and balanced counter-language generator.
-          </p>
-        </div>
+                <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                  {item.title}
+                </div>
 
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
-            <Briefcase size={20} color="#10b981" />
-          </div>
-          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '6px' }}>Lawyer Briefing</h3>
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: '1.45' }}>
-            Action-oriented negotiation playbooks and deal-breaker summaries for General Counsel.
-          </p>
+                <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', lineHeight: '1.4', margin: 0 }}>
+                  {item.desc}
+                </p>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', color: '#818cf8', fontWeight: 600, marginTop: '4px' }}>
+                  <span>Load and Audit</span>
+                  <ArrowRight size={12} aria-hidden="true" />
+                </div>
+              </button>
+            );
+          })}
         </div>
-      </div>
+      </section>
+
+      {/* Main Workflow Progression */}
+      <section aria-labelledby="workflow-heading" className="glass-panel" style={{ padding: '20px' }}>
+        <h2 id="workflow-heading" style={{ fontSize: '0.95rem', fontWeight: 700, textTransform: 'uppercase', color: '#a5b4fc', marginBottom: '14px' }}>
+          Document Analysis Workflow
+        </h2>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+          gap: '12px',
+        }}>
+          {workflowSteps.map((s, idx) => (
+            <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#818cf8', fontFamily: 'var(--font-mono)' }}>
+                {s.num}
+              </div>
+              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                {s.title}
+              </div>
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: '1.35', margin: 0 }}>
+                {s.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
