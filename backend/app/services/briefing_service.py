@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any
 import httpx
 from backend.app.core.config import settings
@@ -58,5 +58,5 @@ class BriefingService:
             "deal_breaker_risks": deal_breakers,
             "negotiation_strategy": strategy,
             "action_items": action_items,
-            "generated_at": datetime.utcnow().isoformat() + "Z"
+            "generated_at": datetime.now(timezone.utc).isoformat()
         }

@@ -4,15 +4,15 @@ export const contractService = {
   uploadFile: (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    return apiClient.post('/contracts/upload', formData);
+    return apiClient.post('/documents/upload', formData);
   },
 
   loadSample: (sampleId) => {
-    return apiClient.post(`/contracts/sample/${sampleId}`, {});
+    return apiClient.post(`/documents/sample/${sampleId}`, {});
   },
 
   getCurrentDocument: () => {
-    return apiClient.get('/contracts/current');
+    return apiClient.get('/documents/current');
   },
 
   getSystemStatus: () => {

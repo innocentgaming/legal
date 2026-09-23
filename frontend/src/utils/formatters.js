@@ -35,3 +35,20 @@ export function getCategoryBadgeColor(category) {
       return { bg: 'rgba(148, 163, 184, 0.12)', border: 'rgba(148, 163, 184, 0.25)', text: '#cbd5e1' };
   }
 }
+
+export function getRiskBadgeColor(riskLevel) {
+  const norm = (riskLevel || 'STANDARD').toUpperCase().replace(' ', '_');
+  switch (norm) {
+    case 'HIGH_RISK':
+    case 'HIGH':
+      return { bg: 'rgba(239, 68, 68, 0.18)', border: 'rgba(239, 68, 68, 0.45)', text: '#f87171', label: 'HIGH RISK' };
+    case 'WORTH_NOTING':
+    case 'MEDIUM':
+      return { bg: 'rgba(245, 158, 11, 0.18)', border: 'rgba(245, 158, 11, 0.45)', text: '#fbbf24', label: 'WORTH NOTING' };
+    case 'STANDARD':
+    case 'LOW':
+    default:
+      return { bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.35)', text: '#34d399', label: 'STANDARD' };
+  }
+}
+
