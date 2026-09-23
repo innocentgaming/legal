@@ -119,7 +119,7 @@ export default function BriefingPage({ document, onNavigate, onLoadSample }) {
           {onLoadSample && (
             <>
               <button 
-                onClick={() => onLoadSample('sample_saas_msa')}
+                onClick={() => onLoadSample('saas-msa')}
                 className="btn-secondary"
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px' }}
               >
@@ -127,7 +127,7 @@ export default function BriefingPage({ document, onNavigate, onLoadSample }) {
                 <span>Test with SaaS MSA Sample</span>
               </button>
               <button 
-                onClick={() => onLoadSample('sample_nda')}
+                onClick={() => onLoadSample('mutual-nda')}
                 className="btn-secondary"
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px' }}
               >

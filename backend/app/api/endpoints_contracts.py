@@ -55,19 +55,37 @@ async def load_sample(sample_id: str):
     """
     Loads one of the pre-bundled benchmark legal contracts.
     """
+    raw_id = sample_id.lower().strip()
+    normalized_key = raw_id.replace("_", "-").replace("sample-", "").replace("sample", "")
+    if normalized_key.startswith("-"):
+        normalized_key = normalized_key[1:]
+
+    sample_aliases = {
+        "saas-msa": "saas-msa",
+        "msa": "saas-msa",
+        "saas": "saas-msa",
+        "mutual-nda": "mutual-nda",
+        "nda": "mutual-nda",
+        "employment-ip": "employment-ip",
+        "employment": "employment-ip",
+        "ip": "employment-ip"
+    }
+
+    canonical_key = sample_aliases.get(raw_id) or sample_aliases.get(normalized_key) or raw_id
+
     samples = {
         "saas-msa": ("Enterprise_SaaS_Master_Services_Agreement.txt", SAMPLE_SAAS_MSA),
         "mutual-nda": ("Mutual_Non_Disclosure_Agreement.txt", SAMPLE_NDA),
         "employment-ip": ("Proprietary_Information_and_Inventions_Agreement.txt", SAMPLE_EMPLOYMENT_IP)
     }
 
-    if sample_id not in samples:
+    if canonical_key not in samples:
         raise HTTPException(
             status_code=404, 
             detail=f"Sample '{sample_id}' not found. Available: {', '.join(samples.keys())}"
         )
 
-    filename, text = samples[sample_id]
+    filename, text = samples[canonical_key]
     doc = ingestion_service.ingest_raw_text(filename, text)
     return doc.to_dict()
 

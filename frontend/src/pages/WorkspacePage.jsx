@@ -92,7 +92,7 @@ export default function WorkspacePage({
           {onLoadSample && (
             <>
               <button 
-                onClick={() => onLoadSample('sample_saas_msa')} 
+                onClick={() => onLoadSample('saas-msa')} 
                 className="btn-secondary"
                 style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
@@ -100,7 +100,7 @@ export default function WorkspacePage({
                 <span>Test SaaS MSA</span>
               </button>
               <button 
-                onClick={() => onLoadSample('sample_nda')} 
+                onClick={() => onLoadSample('mutual-nda')} 
                 className="btn-secondary"
                 style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
