@@ -1,14 +1,19 @@
 # Clarity — AI Legal Co-Pilot
 
+[![Live Web Application](https://img.shields.io/badge/Live%20App-Vercel%20Production-blueviolet?style=for-the-badge&logo=vercel)](https://legal-eight-psi.vercel.app/)
+[![Live Backend API](https://img.shields.io/badge/Live%20API-Render%20Production-success?style=for-the-badge&logo=render)](https://clarity-legal-api.onrender.com/api/health)
+
 [![Architecture: FastAPI + React](https://img.shields.io/badge/Architecture-FastAPI%20%2B%20React%20%2F%20Vite-indigo)](https://fastapi.tiangolo.com)
-[![Footprint: Under 1MB](https://img.shields.io/badge/Footprint-0.7MB%20(Lightweight)-emerald)](https://github.com/innocentgaming/legal)
+[![Footprint: Under 1MB](https://img.shields.io/badge/Footprint-0.78MB%20(Lightweight)-emerald)](https://github.com/innocentgaming/legal)
 [![Parsing: PDFPlumber + Mammoth](https://img.shields.io/badge/Parsing-PDFPlumber%20%2B%20Mammoth-cyan)](https://github.com/jsvine/pdfplumber)
 [![Retrieval: In--Memory Vector Engine](https://img.shields.io/badge/Retrieval-In--Memory%20Vector%20Engine-amber)](https://numpy.org)
-[![Tests: 59 Passing](https://img.shields.io/badge/Tests-59%2F59%20Passing-brightgreen)](https://docs.pytest.org)
+[![Tests: 60 Passing](https://img.shields.io/badge/Tests-60%2F60%20Passing-brightgreen)](https://docs.pytest.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
 > **"Understand your legal documents before you talk to a lawyer."**  
-> *Clarity helps you understand, question, compare, and prepare.*
+> 🌐 **Live Application**: [https://legal-eight-psi.vercel.app/](https://legal-eight-psi.vercel.app/)  
+> ⚡ **Live API Service**: [https://clarity-legal-api.onrender.com](https://clarity-legal-api.onrender.com)  
+> 📦 **GitHub Repository**: [https://github.com/innocentgaming/legal](https://github.com/innocentgaming/legal)
 
 ---
 
