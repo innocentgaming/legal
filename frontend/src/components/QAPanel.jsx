@@ -9,7 +9,6 @@ import {
   CornerDownRight, 
   CheckCircle2, 
   ShieldAlert, 
-  Info,
   FileText
 } from 'lucide-react';
 

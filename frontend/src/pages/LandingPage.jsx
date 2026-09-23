@@ -1,16 +1,10 @@
 import React from 'react';
 import { 
-  FileText, 
-  ShieldCheck, 
-  MessageSquare, 
-  GitCompare, 
-  Briefcase, 
   ArrowRight, 
   FileCheck2, 
   Building, 
   UserCheck, 
-  Lock, 
-  Layers
+  Lock
 } from 'lucide-react';
 import { ROUTES } from '../types/constants';
 

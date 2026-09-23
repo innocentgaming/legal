@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, FileText, CheckCircle2, ShieldAlert, Sparkles, Zap, Lock, BookOpen } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, Sparkles, Zap, Lock } from 'lucide-react';
 
 export default function Dropzone({ onFileUpload, onLoadSample, isUploading }) {
   const [isDragOver, setIsDragOver] = useState(false);

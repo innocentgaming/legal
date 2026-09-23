@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertTriangle, ShieldAlert, Sparkles, ExternalLink, ShieldCheck, AlertCircle, FileWarning } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, Sparkles, ExternalLink, AlertCircle, FileWarning } from 'lucide-react';
 import { LoadingState } from './LoadingState';
 
 export default function RiskPanel({
@@ -56,7 +56,7 @@ export default function RiskPanel({
     );
   }
 
-  const { overall_risk_score, risk_level, executive_summary, key_findings, missing_clauses, clause_risks } = analysis;
+  const { overall_risk_score, executive_summary, key_findings, missing_clauses, clause_risks } = analysis;
 
   // Use clause_risks or key_findings
   const findingsList = (clause_risks || []).length > 0

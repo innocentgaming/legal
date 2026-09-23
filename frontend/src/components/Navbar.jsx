@@ -1,8 +1,8 @@
 import React from 'react';
-import { Scale, FileText, UploadCloud, GitCompare, Briefcase, CheckCircle2 } from 'lucide-react';
+import { Scale, FileText, UploadCloud, GitCompare, Briefcase } from 'lucide-react';
 import { ROUTES } from '../types/constants';
 
-export default function Navbar({ currentRoute, onNavigate, document, systemStatus }) {
+export default function Navbar({ currentRoute, onNavigate, document }) {
   const navItems = [
     { route: ROUTES.LANDING, label: 'Overview', icon: Scale },
     { route: ROUTES.UPLOAD, label: 'Upload & Ingest', icon: UploadCloud },

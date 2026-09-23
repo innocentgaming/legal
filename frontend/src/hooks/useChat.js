@@ -15,7 +15,6 @@ export function useChat() {
     setError(null);
 
     try {
-      const history = messages.slice(-6).map((m) => ({ role: m.role, content: m.content }));
       const response = await chatService.askQA(queryText, docId);
       
       const assistantMessage = {
@@ -39,7 +38,7 @@ export function useChat() {
     } finally {
       setThinking(false);
     }
-  }, [messages, thinking]);
+  }, [thinking]);
 
   const clearChat = useCallback(() => {
     setMessages([]);

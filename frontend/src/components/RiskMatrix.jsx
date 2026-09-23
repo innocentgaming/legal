@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertTriangle, AlertCircle, CheckCircle2, ShieldAlert, Sparkles, ArrowRight, ExternalLink, FileWarning, Check } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ShieldAlert, Sparkles, ExternalLink, FileWarning, Check } from 'lucide-react';
 
 export default function RiskMatrix({ 
   analysis, 

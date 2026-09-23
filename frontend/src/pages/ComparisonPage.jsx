@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   GitCompare, 
   Sparkles, 
@@ -6,17 +6,14 @@ import {
   Check, 
   Scale, 
   ArrowRightLeft, 
-  FileCode2, 
   CheckCircle2, 
   AlertTriangle, 
   PlusCircle, 
   MinusCircle, 
   Eye, 
   X, 
-  Layers, 
   BookOpen, 
-  Info,
-  ExternalLink
+  Info
 } from 'lucide-react';
 import { comparisonService } from '../services/contractService';
 import { LoadingState } from '../components/LoadingState';
@@ -115,22 +112,7 @@ export default function ComparisonPage({
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (selectedClause) {
-      setActiveClause(selectedClause);
-    } else if (clauses && clauses.length > 0 && !activeClause) {
-      setActiveClause(clauses[0]);
-    }
-  }, [selectedClause, clauses]);
-
-  // Run initial benchmark comparison on mount
-  useEffect(() => {
-    if (!comparisonResult && docTextA && docTextB) {
-      runTwoDocComparison(docTextA, docTextB, labelA, labelB);
-    }
-  }, []);
-
-  const runTwoDocComparison = async (textA, textB, lA, lB) => {
+  const runTwoDocComparison = useCallback(async (textA, textB, lA, lB) => {
     if (!textA.trim() || !textB.trim()) {
       alert('Please provide text for both Document A and Document B.');
       return;
@@ -144,7 +126,22 @@ export default function ComparisonPage({
     } finally {
       setIsComparing(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (selectedClause) {
+      setActiveClause(selectedClause);
+    } else if (clauses && clauses.length > 0) {
+      setActiveClause((prev) => prev || clauses[0]);
+    }
+  }, [selectedClause, clauses]);
+
+  // Run initial benchmark comparison on mount
+  useEffect(() => {
+    if (!comparisonResult && docTextA && docTextB) {
+      runTwoDocComparison(docTextA, docTextB, labelA, labelB);
+    }
+  }, [comparisonResult, docTextA, docTextB, labelA, labelB, runTwoDocComparison]);
 
   const handleLoadBenchmark = (pair) => {
     setDocTextA(pair.docA);

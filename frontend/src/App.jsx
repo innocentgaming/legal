@@ -26,7 +26,6 @@ export default function App() {
     setError: setContractError,
     uploadDocument,
     loadSampleDocument,
-    resetDocument,
   } = useContract();
 
   const {
@@ -54,26 +53,26 @@ export default function App() {
 
   const handleFileUpload = async (file) => {
     try {
-      const res = await uploadDocument(file);
+      await uploadDocument(file);
       clearAudit();
       clearChat();
       setCurrentRoute(ROUTES.WORKSPACE);
       // Auto run audit
       runAudit();
-    } catch (err) {
+    } catch {
       // Handled by hook
     }
   };
 
   const handleLoadSample = async (sampleId) => {
     try {
-      const res = await loadSampleDocument(sampleId);
+      await loadSampleDocument(sampleId);
       clearAudit();
       clearChat();
       setCurrentRoute(ROUTES.WORKSPACE);
       // Auto run audit
       runAudit();
-    } catch (err) {
+    } catch {
       // Handled by hook
     }
   };

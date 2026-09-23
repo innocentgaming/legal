@@ -17,8 +17,6 @@ import {
   ShieldAlert,
   HelpCircle,
   MapPin,
-  ExternalLink,
-  ChevronRight
 } from 'lucide-react';
 import { getCategoryBadgeColor, getRiskBadgeColor } from '../utils/formatters';
 
@@ -31,7 +29,6 @@ export default function ClauseSummaryPanel({
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRisk, setSelectedRisk] = useState('ALL');
-  const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [expandedClauseIds, setExpandedClauseIds] = useState({});
   const [copiedId, setCopiedId] = useState(null);
   const clauseRefs = useRef({});
@@ -39,7 +36,7 @@ export default function ClauseSummaryPanel({
   // When activeClauseId changes externally (e.g. from document viewer), auto-expand and scroll
   useEffect(() => {
     if (activeClauseId) {
-      setExpandedClauseIds((prev) => ({ ...prev, [activeClauseId]: true }));
+      setExpandedClauseIds((prev) => (prev[activeClauseId] ? prev : { ...prev, [activeClauseId]: true }));
       if (clauseRefs.current[activeClauseId]) {
         clauseRefs.current[activeClauseId].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
@@ -73,13 +70,9 @@ export default function ClauseSummaryPanel({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const categories = ['ALL', ...Array.from(new Set(clauses.map((c) => c.category || 'General Legal Terms')))];
-
   const filteredClauses = clauses.filter((c) => {
-    const id = c.clause_id || c.id;
     const cRisk = (c.risk_level || 'STANDARD').toUpperCase().replace(' ', '_');
     const matchesRisk = selectedRisk === 'ALL' || cRisk === selectedRisk;
-    const matchesCat = selectedCategory === 'ALL' || c.category === selectedCategory;
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch =
       !searchQuery ||
@@ -89,7 +82,7 @@ export default function ClauseSummaryPanel({
       (c.original_text && c.original_text.toLowerCase().includes(searchLower)) ||
       (c.text && c.text.toLowerCase().includes(searchLower));
 
-    return matchesRisk && matchesCat && matchesSearch;
+    return matchesRisk && matchesSearch;
   });
 
   return (

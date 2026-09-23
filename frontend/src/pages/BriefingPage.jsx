@@ -1,41 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Briefcase, 
   Sparkles, 
   Download, 
-  FileText, 
   Printer, 
   Check, 
   Copy, 
-  AlertTriangle, 
   Clock, 
   ShieldAlert, 
   HelpCircle, 
   Scale, 
   Layers, 
-  CheckCircle2, 
-  Bookmark, 
-  FileCheck, 
-  ArrowRight,
   Info
 } from 'lucide-react';
 import { briefingService } from '../services/contractService';
 import { LoadingState } from '../components/LoadingState';
 
-export default function BriefingPage({ document, clauses }) {
+export default function BriefingPage({ document }) {
   const [targetRole, setTargetRole] = useState('General Counsel');
   const [briefingData, setBriefingData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const printRef = useRef(null);
 
-  useEffect(() => {
-    if (document && !briefingData) {
-      handleGenerateBriefing();
-    }
-  }, [document]);
-
-  const handleGenerateBriefing = async () => {
+  const handleGenerateBriefing = useCallback(async () => {
     if (!document) return;
     setLoading(true);
     try {
@@ -47,7 +35,13 @@ export default function BriefingPage({ document, clauses }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [document, targetRole]);
+
+  useEffect(() => {
+    if (document && !briefingData) {
+      handleGenerateBriefing();
+    }
+  }, [document, briefingData, handleGenerateBriefing]);
 
   const handleExportMarkdown = () => {
     if (!briefingData) return;

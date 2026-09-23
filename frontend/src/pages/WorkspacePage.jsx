@@ -3,22 +3,13 @@ import {
   ShieldAlert, 
   MessageSquare, 
   Sparkles, 
-  Scale, 
   Search, 
   FileText, 
   CheckCircle2, 
   Key, 
   Clock, 
-  AlertTriangle, 
-  AlertCircle, 
-  ShieldCheck, 
   Copy, 
   Check, 
-  Eye, 
-  Filter, 
-  Layers, 
-  ChevronRight,
-  ExternalLink
 } from 'lucide-react';
 import RiskPanel from '../components/RiskPanel';
 import QAPanel from '../components/QAPanel';
@@ -46,10 +37,10 @@ export default function WorkspacePage({
   const clauseRefs = useRef({});
 
   useEffect(() => {
-    if (clauses && clauses.length > 0 && !selectedClauseId) {
-      setSelectedClauseId(clauses[0].clause_id || clauses[0].id);
+    if (clauses && clauses.length > 0) {
+      setSelectedClauseId((prev) => prev || clauses[0].clause_id || clauses[0].id);
     }
-  }, [clauses, selectedClauseId]);
+  }, [clauses]);
 
   if (!document) {
     return (

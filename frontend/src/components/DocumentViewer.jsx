@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, FileText, Sparkles, Copy, Check, Bookmark, ArrowUpRight, Filter } from 'lucide-react';
+import { Search, FileText, Sparkles, Copy, Check } from 'lucide-react';
 
 export default function DocumentViewer({ 
   chunks, 
-  metadata, 
   activeClauseId, 
   onSelectForRedline,
   onClauseClick 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, FileCode2, Copy, Check, ArrowRightLeft, ShieldCheck, Scale, RefreshCw } from 'lucide-react';
+import { Sparkles, Copy, Check, ArrowRightLeft, Scale } from 'lucide-react';
 
 export default function RedlineViewer({ 
   selectedClause, 
@@ -15,8 +15,8 @@ export default function RedlineViewer({
   useEffect(() => {
     if (selectedClause) {
       setActiveClause(selectedClause);
-    } else if (chunks && chunks.length > 0 && !activeClause) {
-      setActiveClause(chunks[0]);
+    } else if (chunks && chunks.length > 0) {
+      setActiveClause((prev) => prev || chunks[0]);
     }
   }, [selectedClause, chunks]);
 

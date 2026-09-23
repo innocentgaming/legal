@@ -11,7 +11,6 @@ export default function Header({
   onReset 
 }) {
   const riskScore = analysis?.overall_risk_score;
-  const riskLevel = analysis?.risk_level || "Pending";
 
   const getRiskBadge = () => {
     if (riskScore === undefined || riskScore === null) return null;
