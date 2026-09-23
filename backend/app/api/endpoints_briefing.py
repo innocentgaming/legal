@@ -21,6 +21,13 @@ async def generate_lawyer_briefing(req: BriefingRequest):
     target_role = req.target_role or "General Counsel"
     comparison_data = req.comparison_data
 
+    if doc.briefing_cache and not comparison_data:
+        return {
+            "status": "success",
+            "briefing": doc.briefing_cache,
+            "disclaimer": DISCLAIMER_TEXT
+        }
+
     try:
         briefing_data = await BriefingService.generate_briefing(
             filename=doc.filename,
@@ -29,6 +36,9 @@ async def generate_lawyer_briefing(req: BriefingRequest):
             target_role=target_role,
             comparison_data=comparison_data
         )
+        if not comparison_data:
+            doc.briefing_cache = briefing_data
+
         return {
             "status": "success",
             "briefing": briefing_data,
