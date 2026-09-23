@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { 
   GitCompare, 
   Sparkles, 
@@ -105,8 +105,11 @@ export default function ComparisonPage({
   const [filterType, setFilterType] = useState('ALL'); // 'ALL' | 'MODIFIED' | 'ADDED' | 'REMOVED' | 'MATCH'
   const [inspectedClause, setInspectedClause] = useState(null);
 
+  // Client-side comparison cache
+  const comparisonCacheRef = useRef({});
+
   // Clause Redline state
-  const [activeClause, setActiveClause] = useState(selectedClause || (clauses && clauses[0]) || null);
+  const [activeClause, setActiveClause] = useState(() => selectedClause || (clauses && clauses[0]) || null);
   const [instructions, setInstructions] = useState('Make this clause mutual, balanced, with aggregate liability cap and reasonable cure periods.');
   const [redlineResult, setRedlineResult] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -117,9 +120,15 @@ export default function ComparisonPage({
       alert('Please provide text for both Document A and Document B.');
       return;
     }
+    const cacheKey = `${textA.slice(0, 100)}_${textB.slice(0, 100)}_${lA}_${lB}`;
+    if (comparisonCacheRef.current[cacheKey]) {
+      setComparisonResult(comparisonCacheRef.current[cacheKey]);
+      return;
+    }
     setIsComparing(true);
     try {
       const data = await comparisonService.compareDocuments(textA, textB, lA, lB);
+      comparisonCacheRef.current[cacheKey] = data;
       setComparisonResult(data);
     } catch (err) {
       alert(`Comparison failed: ${err.message}`);
@@ -131,10 +140,8 @@ export default function ComparisonPage({
   useEffect(() => {
     if (selectedClause) {
       setActiveClause(selectedClause);
-    } else if (clauses && clauses.length > 0) {
-      setActiveClause((prev) => prev || clauses[0]);
     }
-  }, [selectedClause, clauses]);
+  }, [selectedClause]);
 
   // Run initial benchmark comparison on mount
   useEffect(() => {
@@ -143,15 +150,15 @@ export default function ComparisonPage({
     }
   }, [comparisonResult, docTextA, docTextB, labelA, labelB, runTwoDocComparison]);
 
-  const handleLoadBenchmark = (pair) => {
+  const handleLoadBenchmark = useCallback((pair) => {
     setDocTextA(pair.docA);
     setDocTextB(pair.docB);
     setLabelA(pair.labelA);
     setLabelB(pair.labelB);
     runTwoDocComparison(pair.docA, pair.docB, pair.labelA, pair.labelB);
-  };
+  }, [runTwoDocComparison]);
 
-  const handleGenerateRedline = async () => {
+  const handleGenerateRedline = useCallback(async () => {
     if (!activeClause) return;
     setIsGenerating(true);
     try {
@@ -167,18 +174,19 @@ export default function ComparisonPage({
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [activeClause, instructions]);
 
-  const handleCopy = (text) => {
+  const handleCopy = useCallback((text) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
+  }, []);
 
-  const filteredPairs = comparisonResult?.clause_pairs?.filter((pair) => {
-    if (filterType === 'ALL') return true;
-    return pair.difference_type === filterType;
-  }) || [];
+  const filteredPairs = useMemo(() => {
+    if (!comparisonResult?.clause_pairs) return [];
+    if (filterType === 'ALL') return comparisonResult.clause_pairs;
+    return comparisonResult.clause_pairs.filter((pair) => pair.difference_type === filterType);
+  }, [comparisonResult, filterType]);
 
   return (
     <div style={{

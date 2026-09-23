@@ -176,6 +176,11 @@ export default function App() {
       color: 'var(--text-main)',
       overflowX: 'hidden',
     }}>
+      {/* WCAG 2.4.1 Bypass Block / Skip to Content */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       {/* Top Accessible Navbar */}
       <Navbar
         currentRoute={currentRoute}
@@ -230,7 +235,7 @@ export default function App() {
       )}
 
       {/* Main Page Body with Suspense Code Splitting */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <main id="main-content" tabIndex={-1} style={{ flex: 1, display: 'flex', flexDirection: 'column', outline: 'none' }}>
         <Suspense fallback={<LoadingState message="Optimizing interface..." />}>
           {currentRoute === ROUTES.LANDING && (
             <div style={{ flex: 1, overflowY: 'auto' }}>

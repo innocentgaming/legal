@@ -5,10 +5,8 @@ import {
   Building2, 
   UserCheck, 
   Lock, 
-  ShieldAlert, 
   Sparkles, 
   CheckCircle2, 
-  Layers, 
   Scale, 
   Cpu
 } from 'lucide-react';
