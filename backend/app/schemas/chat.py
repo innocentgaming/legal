@@ -1,20 +1,37 @@
-from typing import List, Optional, Dict
-from pydantic import BaseModel
+from typing import List, Optional, Dict, Any
+from pydantic import BaseModel, Field
 
-class ChatCitation(BaseModel):
+class CitationObject(BaseModel):
     clause_id: str
-    title: str
-    section: Optional[str] = None
+    clause_number: str = ""
+    page: int = 1
+    quoted_source: str
+    relevance: str = ""
+    title: Optional[str] = ""
     snippet: Optional[str] = None
+    section: Optional[str] = None
 
-class ChatRequest(BaseModel):
-    query: str
+# Backward compatibility alias
+ChatCitation = CitationObject
+
+class QARequest(BaseModel):
+    question: Optional[str] = None
+    query: Optional[str] = None
     document_id: Optional[str] = None
-    history: Optional[List[Dict[str, str]]] = []
+    history: Optional[List[Dict[str, str]]] = Field(default_factory=list)
     top_k: Optional[int] = 4
 
-class ChatResponse(BaseModel):
+# Backward compatibility alias
+ChatRequest = QARequest
+
+class QAResponse(BaseModel):
     status: str = "success"
     answer: str
-    citations: List[ChatCitation]
-    provider: str
+    citations: List[CitationObject] = Field(default_factory=list)
+    grounded: bool = True
+    provider: str = "Clarity Grounded Engine"
+    label: str = "Answer based on your uploaded document"
+    disclaimer: str = "Answer based on your uploaded document. Clarity provides informational analysis and is not a substitute for legal counsel."
+
+# Backward compatibility alias
+ChatResponse = QAResponse

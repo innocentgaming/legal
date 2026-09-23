@@ -151,6 +151,7 @@ export default function WorkspacePage({
               thinking={chatThinking}
               onSendMessage={onSendMessage}
               onJumpToClause={handleJumpToClause}
+              documentId={document?.metadata?.document_id || document?.id}
             />
           )}
         </div>

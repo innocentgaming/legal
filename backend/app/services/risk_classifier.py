@@ -348,6 +348,45 @@ class RiskClassifierService:
         }
 
     @classmethod
+    def audit_document(cls, clauses: List[Dict[str, Any]], raw_text: str = "", filename: str = "") -> Dict[str, Any]:
+        """
+        Synchronous baseline document audit using deterministic pattern rules.
+        """
+        if not clauses:
+            return cls._empty_analysis(filename)
+        deterministic_risks = [DeterministicRiskEngine.analyze_clause(c) for c in clauses]
+        merged_risks = cls._merge_hybrid_results(deterministic_risks, None, clauses)
+        high_count = sum(1 for r in merged_risks if r["risk_level"] == "HIGH_RISK")
+        worth_count = sum(1 for r in merged_risks if r["risk_level"] == "WORTH_NOTING")
+        std_count = sum(1 for r in merged_risks if r["risk_level"] == "STANDARD")
+        base_score = 10 + (high_count * 25) + (worth_count * 10)
+        overall_score = min(98, max(12, base_score))
+        overall_level = "High" if overall_score >= 60 or high_count >= 2 else ("Medium" if overall_score >= 35 or worth_count >= 2 else "Low")
+        key_findings = [
+            {
+                "clause_id": r["clause_id"],
+                "clause_title": r["source_clause"],
+                "severity": "High" if r["risk_level"] == "HIGH_RISK" else "Medium",
+                "risk_category": r.get("category", "General"),
+                "issue_summary": r["reason"],
+                "legal_recommendation": cls._get_recommendation(r.get("category", ""), r["risk_level"]),
+                "flagged_text": r["evidence"]
+            }
+            for r in merged_risks if r["risk_level"] in ["HIGH_RISK", "WORTH_NOTING"]
+        ]
+        return {
+            "overall_risk_score": overall_score,
+            "risk_level": overall_level,
+            "executive_summary": f"Audit of '{filename or 'Contract'}' identified {high_count} high-priority clauses.",
+            "clause_risks": merged_risks,
+            "key_findings": key_findings,
+            "missing_clauses": cls._detect_missing_clauses(clauses, raw_text),
+            "high_risk_count": high_count,
+            "worth_noting_count": worth_count,
+            "standard_count": std_count
+        }
+
+    @classmethod
     def classify_single_clause(cls, clause_text: str, title: str = "", clause_id: str = "CLAUSE-001") -> Dict[str, Any]:
         """
         Classifies a single clause synchronously via deterministic rule engine.

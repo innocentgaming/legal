@@ -27,8 +27,12 @@ export const analysisService = {
 };
 
 export const chatService = {
+  askQA: (question, documentId = null) => {
+    return apiClient.post('/qa', { question, document_id: documentId });
+  },
+
   sendQuery: (query, history = [], topK = 4) => {
-    return apiClient.post('/chat/query', { query, history, top_k: topK });
+    return apiClient.post('/qa', { question: query, query, history, top_k: topK });
   },
 };
 
