@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Scale, FileText, UploadCloud, GitCompare, Briefcase, Menu, X, FolderLock, User, LogOut, Lock } from 'lucide-react';
+import { Scale, FileText, UploadCloud, GitCompare, Briefcase, Menu, X, FolderLock, LogOut, Lock } from 'lucide-react';
 import { ROUTES } from '../types/constants';
 
 export default function Navbar({ 

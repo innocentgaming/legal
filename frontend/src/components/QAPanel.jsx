@@ -49,14 +49,19 @@ export default function QAPanel({
       overflow: 'hidden',
     }}>
       {/* Messages area */}
-      <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        padding: '14px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '14px',
-      }}>
+      <div 
+        role="log"
+        aria-live="polite"
+        aria-label="Contract Q&A message history"
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '14px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+        }}
+      >
         {messages.length === 0 ? (
           <div style={{
             display: 'flex',
@@ -285,7 +290,7 @@ export default function QAPanel({
         )}
 
         {thinking && (
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div role="status" aria-label="Query processing and grounded retrieval in progress" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <div style={{
               width: '30px',
               height: '30px',
@@ -295,10 +300,10 @@ export default function QAPanel({
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-              <Bot size={15} color="#fff" />
+              <Bot size={15} color="#fff" aria-hidden="true" />
             </div>
             <div className="glass-panel" style={{ padding: '8px 14px', borderRadius: '8px', fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={14} color="#818cf8" className="pulsing-radar" />
+              <Sparkles size={14} color="#818cf8" className="pulsing-radar" aria-hidden="true" />
               <span>Query processing & grounded retrieval in progress...</span>
             </div>
           </div>
@@ -309,6 +314,7 @@ export default function QAPanel({
       {/* Input Form */}
       <form
         onSubmit={handleSubmit}
+        aria-label="Document question form"
         style={{
           padding: '12px 14px',
           borderTop: '1px solid var(--border-subtle)',
@@ -323,6 +329,7 @@ export default function QAPanel({
           value={inputQuery}
           onChange={(e) => setInputQuery(e.target.value)}
           disabled={thinking}
+          aria-label="Ask a question about your uploaded document"
           style={{
             flex: 1,
             background: 'rgba(255, 255, 255, 0.05)',
@@ -334,8 +341,14 @@ export default function QAPanel({
             outline: 'none',
           }}
         />
-        <button type="submit" disabled={!inputQuery.trim() || thinking} className="btn-primary" style={{ padding: '0 14px' }}>
-          <Send size={15} />
+        <button 
+          type="submit" 
+          disabled={!inputQuery.trim() || thinking} 
+          className="btn-primary" 
+          aria-label="Send question"
+          style={{ padding: '0 14px' }}
+        >
+          <Send size={15} aria-hidden="true" />
         </button>
       </form>
     </div>

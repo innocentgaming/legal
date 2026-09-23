@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, FolderLock, FileText, Trash2, ArrowUpRight, Clock, ShieldAlert, CheckCircle, AlertTriangle } from 'lucide-react';
 import { authService } from '../services/authService';
 
@@ -8,13 +8,7 @@ export default function SavedContractsModal({ isOpen, onClose, onLoadSavedContra
   const [error, setError] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchContracts();
-    }
-  }, [isOpen]);
-
-  const fetchContracts = async () => {
+  const fetchContracts = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -25,7 +19,18 @@ export default function SavedContractsModal({ isOpen, onClose, onLoadSavedContra
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchContracts();
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') onClose();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, fetchContracts, onClose]);
 
   const handleDelete = async (id, e) => {
     e.stopPropagation();

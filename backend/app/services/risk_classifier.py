@@ -188,6 +188,21 @@ class DeterministicRiskEngine:
         }
     ]
 
+    # Pre-compiled patterns cache
+    _COMPILED_PATTERNS: Optional[List[Dict[str, Any]]] = None
+
+    @classmethod
+    def _get_patterns(cls) -> List[Dict[str, Any]]:
+        if cls._COMPILED_PATTERNS is None:
+            cls._COMPILED_PATTERNS = [
+                {
+                    **p,
+                    "compiled": re.compile(p["regex"], re.IGNORECASE)
+                }
+                for p in cls.PATTERNS
+            ]
+        return cls._COMPILED_PATTERNS
+
     @classmethod
     def analyze_clause(cls, clause: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -212,8 +227,9 @@ class DeterministicRiskEngine:
 
         # Match against patterns in order of severity
         matched_results = []
-        for pattern in cls.PATTERNS:
-            match = re.search(pattern["regex"], text, re.IGNORECASE)
+        patterns = cls._get_patterns()
+        for pattern in patterns:
+            match = pattern["compiled"].search(text)
             if match:
                 matched_evidence = match.group(0).strip()
                 # Expand slightly to sentence boundary for clarity while guaranteeing it's a substring

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   Search,
   FileText,
@@ -43,47 +43,49 @@ export default function ClauseSummaryPanel({
     }
   }, [activeClauseId]);
 
-  const toggleExpand = (id, e) => {
+  const toggleExpand = useCallback((id, e) => {
     if (e) e.stopPropagation();
     setExpandedClauseIds((prev) => ({
       ...prev,
       [id]: !prev[id],
     }));
-  };
+  }, []);
 
-  const expandAll = () => {
+  const expandAll = useCallback(() => {
     const all = {};
     clauses.forEach((c) => {
       all[c.clause_id || c.id] = true;
     });
     setExpandedClauseIds(all);
-  };
+  }, [clauses]);
 
-  const collapseAll = () => {
+  const collapseAll = useCallback(() => {
     setExpandedClauseIds({});
-  };
+  }, []);
 
-  const handleCopy = (id, text, e) => {
+  const handleCopy = useCallback((id, text, e) => {
     if (e) e.stopPropagation();
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
-  };
+  }, []);
 
-  const filteredClauses = clauses.filter((c) => {
-    const cRisk = (c.risk_level || 'STANDARD').toUpperCase().replace(' ', '_');
-    const matchesRisk = selectedRisk === 'ALL' || cRisk === selectedRisk;
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch =
-      !searchQuery ||
-      (c.title && c.title.toLowerCase().includes(searchLower)) ||
-      (c.clause_number && c.clause_number.toLowerCase().includes(searchLower)) ||
-      (c.plain_language && c.plain_language.toLowerCase().includes(searchLower)) ||
-      (c.original_text && c.original_text.toLowerCase().includes(searchLower)) ||
-      (c.text && c.text.toLowerCase().includes(searchLower));
+  const filteredClauses = useMemo(() => {
+    const searchLower = searchQuery.trim().toLowerCase();
+    return clauses.filter((c) => {
+      const cRisk = (c.risk_level || 'STANDARD').toUpperCase().replace(' ', '_');
+      const matchesRisk = selectedRisk === 'ALL' || cRisk === selectedRisk;
+      const matchesSearch =
+        !searchLower ||
+        (c.title && c.title.toLowerCase().includes(searchLower)) ||
+        (c.clause_number && c.clause_number.toLowerCase().includes(searchLower)) ||
+        (c.plain_language && c.plain_language.toLowerCase().includes(searchLower)) ||
+        (c.original_text && c.original_text.toLowerCase().includes(searchLower)) ||
+        (c.text && c.text.toLowerCase().includes(searchLower));
 
-    return matchesRisk && matchesSearch;
-  });
+      return matchesRisk && matchesSearch;
+    });
+  }, [clauses, selectedRisk, searchQuery]);
 
   return (
     <div

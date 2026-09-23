@@ -193,12 +193,16 @@ class ComparisonService:
                 for ca in clauses_a
             ]
 
-        # Compute pairwise similarity matrix
+        # Precompute normalized features for clauses to avoid repeated O(C1 * C2) re-computations
+        features_a = [cls._extract_clause_features(ca) for ca in clauses_a]
+        features_b = [cls._extract_clause_features(cb) for cb in clauses_b]
+
+        # Compute pairwise similarity matrix using precomputed features
         sim_matrix: List[List[float]] = []
-        for ca in clauses_a:
+        for fa in features_a:
             row = []
-            for cb in clauses_b:
-                sim = cls._calculate_clause_similarity(ca, cb)
+            for fb in features_b:
+                sim = cls._calculate_feature_similarity(fa, fb)
                 row.append(sim)
             sim_matrix.append(row)
 
@@ -282,40 +286,49 @@ class ComparisonService:
         return results
 
     @classmethod
-    def _calculate_clause_similarity(cls, ca: Dict[str, Any], cb: Dict[str, Any]) -> float:
-        """
-        Combines title matching, token overlap, and difflib sequence similarity.
-        """
-        text_a = ca.get("original_text", "").lower()
-        text_b = cb.get("original_text", "").lower()
-        title_a = ca.get("title", "").lower()
-        title_b = cb.get("title", "").lower()
+    def _extract_clause_features(cls, clause: Dict[str, Any]) -> Dict[str, Any]:
+        """Precomputes normalized text, title, and token set for efficient similarity comparison."""
+        raw_text = (clause.get("original_text") or clause.get("text") or "").lower()
+        title = (clause.get("title") or "").lower()
+        words = set(re.findall(r'\b\w{3,}\b', raw_text))
+        return {
+            "text": raw_text,
+            "prefix": raw_text[:600],
+            "title": title,
+            "words": words,
+            "raw_clause": clause
+        }
 
-        if not text_a or not text_b:
+    @classmethod
+    def _calculate_feature_similarity(cls, fa: Dict[str, Any], fb: Dict[str, Any]) -> float:
+        """Calculates similarity between two precomputed clause feature representations."""
+        if not fa["text"] or not fb["text"]:
             return 0.0
 
-        # Title similarity boost
         title_match_bonus = 0.0
-        if title_a and title_b:
-            if title_a == title_b:
+        if fa["title"] and fb["title"]:
+            if fa["title"] == fb["title"]:
                 title_match_bonus = 0.25
-            elif difflib.SequenceMatcher(None, title_a, title_b).ratio() > 0.7:
+            elif difflib.SequenceMatcher(None, fa["title"], fb["title"]).ratio() > 0.7:
                 title_match_bonus = 0.15
 
-        # Word token overlap (Jaccard)
-        words_a = set(re.findall(r'\b\w{3,}\b', text_a))
-        words_b = set(re.findall(r'\b\w{3,}\b', text_b))
+        words_a = fa["words"]
+        words_b = fb["words"]
         if words_a and words_b:
             jaccard = len(words_a & words_b) / len(words_a | words_b)
         else:
             jaccard = 0.0
 
-        # Sequence matcher ratio
-        seq_ratio = difflib.SequenceMatcher(None, text_a[:600], text_b[:600]).ratio()
-
-        # Combined similarity score
+        seq_ratio = difflib.SequenceMatcher(None, fa["prefix"], fb["prefix"]).ratio()
         raw_sim = (seq_ratio * 0.5) + (jaccard * 0.35) + title_match_bonus
         return min(1.0, max(0.0, raw_sim))
+
+    @classmethod
+    def _calculate_clause_similarity(cls, ca: Dict[str, Any], cb: Dict[str, Any]) -> float:
+        """Backward compatible similarity calculation."""
+        fa = cls._extract_clause_features(ca)
+        fb = cls._extract_clause_features(cb)
+        return cls._calculate_feature_similarity(fa, fb)
 
     @classmethod
     def _generate_difference_explanation(

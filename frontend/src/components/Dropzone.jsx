@@ -79,10 +79,19 @@ export default function Dropzone({ onFileUpload, onLoadSample, isUploading }) {
 
       {/* Upload Drop Area */}
       <div 
+        tabIndex={0}
+        role="button"
+        aria-label="Upload legal contract drop area. Press Enter or Space to browse files."
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
         className="glass-panel"
         style={{
           padding: '48px 24px',
@@ -91,7 +100,8 @@ export default function Dropzone({ onFileUpload, onLoadSample, isUploading }) {
           border: isDragOver ? '2px dashed #6366f1' : '2px dashed rgba(255, 255, 255, 0.15)',
           backgroundColor: isDragOver ? 'rgba(99, 102, 241, 0.08)' : 'var(--bg-glass)',
           transition: 'all 0.25s ease',
-          boxShadow: isDragOver ? '0 0 30px rgba(99, 102, 241, 0.2)' : 'none'
+          boxShadow: isDragOver ? '0 0 30px rgba(99, 102, 241, 0.2)' : 'none',
+          outline: 'none',
         }}
       >
         <input 
@@ -99,6 +109,7 @@ export default function Dropzone({ onFileUpload, onLoadSample, isUploading }) {
           ref={fileInputRef} 
           onChange={handleFileChange} 
           accept=".pdf,.docx,.doc,.txt,.md"
+          aria-label="Upload legal document file input"
           style={{ display: 'none' }}
         />
 
@@ -113,10 +124,13 @@ export default function Dropzone({ onFileUpload, onLoadSample, isUploading }) {
           alignItems: 'center',
           justifyContent: 'center'
         }}>
-          <UploadCloud size={32} color="#818cf8" className={isUploading ? "pulsing-radar" : ""} />
+          <UploadCloud size={32} color="#818cf8" className={isUploading ? "pulsing-radar" : ""} aria-hidden="true" />
         </div>
 
-        <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '6px' }}>
+        <h3 
+          aria-live="polite" 
+          style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '6px' }}
+        >
           {isUploading ? "Parsing & Indexing Legal Document..." : "Drop your legal contract here, or browse"}
         </h3>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>

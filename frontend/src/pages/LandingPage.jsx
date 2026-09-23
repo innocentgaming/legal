@@ -10,8 +10,6 @@ import {
   CheckCircle2, 
   Layers, 
   Scale, 
-  FileText,
-  Clock,
   Cpu
 } from 'lucide-react';
 import { ROUTES } from '../types/constants';

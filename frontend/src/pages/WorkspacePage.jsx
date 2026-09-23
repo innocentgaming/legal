@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   ShieldAlert, 
   MessageSquare, 
@@ -31,7 +31,7 @@ export default function WorkspacePage({
   onSelectForRedline,
 }) {
   const [activeTab, setActiveTab] = useState('risk'); // 'risk' | 'qa'
-  const [selectedClauseId, setSelectedClauseId] = useState(
+  const [selectedClauseId, setSelectedClauseId] = useState(() => 
     clauses && clauses.length > 0 ? (clauses[0].clause_id || clauses[0].id) : null
   );
   const [navSearch, setNavSearch] = useState('');
@@ -41,9 +41,54 @@ export default function WorkspacePage({
 
   useEffect(() => {
     if (clauses && clauses.length > 0) {
-      setSelectedClauseId((prev) => prev || clauses[0].clause_id || clauses[0].id);
+      setSelectedClauseId((prev) => {
+        if (prev && clauses.some((c) => (c.clause_id || c.id) === prev)) return prev;
+        return clauses[0].clause_id || clauses[0].id;
+      });
     }
   }, [clauses]);
+
+  // Active selected clause object
+  const activeClause = useMemo(() => {
+    return clauses.find(
+      (c) => (c.clause_id || c.id) === selectedClauseId
+    ) || clauses[0] || null;
+  }, [clauses, selectedClauseId]);
+
+  // Filtered clause navigation list
+  const filteredClauses = useMemo(() => {
+    const sLower = navSearch.trim().toLowerCase();
+    return (clauses || []).filter((c) => {
+      const cRisk = (c.risk_level || 'STANDARD').toUpperCase().replace(' ', '_');
+      const matchesRisk = navRiskFilter === 'ALL' || cRisk === navRiskFilter;
+      const matchesSearch =
+        !sLower ||
+        (c.title && c.title.toLowerCase().includes(sLower)) ||
+        (c.clause_number && c.clause_number.toLowerCase().includes(sLower)) ||
+        (c.plain_language && c.plain_language.toLowerCase().includes(sLower)) ||
+        (c.original_text && c.original_text.toLowerCase().includes(sLower)) ||
+        (c.text && c.text.toLowerCase().includes(sLower));
+      return matchesRisk && matchesSearch;
+    });
+  }, [clauses, navRiskFilter, navSearch]);
+
+  const handleJumpToClause = useCallback((clauseId) => {
+    setSelectedClauseId(clauseId);
+    if (clauseRefs.current[clauseId]) {
+      clauseRefs.current[clauseId].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, []);
+
+  const handleCopyClause = useCallback((text) => {
+    navigator.clipboard.writeText(text);
+    setCopiedText(true);
+    setTimeout(() => setCopiedText(false), 2000);
+  }, []);
+
+  const handleRedlineClick = useCallback((clause) => {
+    if (onSelectForRedline) onSelectForRedline(clause);
+    onNavigate(ROUTES.COMPARISON);
+  }, [onSelectForRedline, onNavigate]);
 
   if (!document) {
     return (
@@ -113,44 +158,6 @@ export default function WorkspacePage({
       </main>
     );
   }
-
-  // Active selected clause object
-  const activeClause = clauses.find(
-    (c) => (c.clause_id || c.id) === selectedClauseId
-  ) || clauses[0] || null;
-
-  // Filtered clause navigation list
-  const filteredClauses = (clauses || []).filter((c) => {
-    const cRisk = (c.risk_level || 'STANDARD').toUpperCase().replace(' ', '_');
-    const matchesRisk = navRiskFilter === 'ALL' || cRisk === navRiskFilter;
-    const sLower = navSearch.toLowerCase();
-    const matchesSearch =
-      !navSearch ||
-      (c.title && c.title.toLowerCase().includes(sLower)) ||
-      (c.clause_number && c.clause_number.toLowerCase().includes(sLower)) ||
-      (c.plain_language && c.plain_language.toLowerCase().includes(sLower)) ||
-      (c.original_text && c.original_text.toLowerCase().includes(sLower)) ||
-      (c.text && c.text.toLowerCase().includes(sLower));
-    return matchesRisk && matchesSearch;
-  });
-
-  const handleJumpToClause = (clauseId) => {
-    setSelectedClauseId(clauseId);
-    if (clauseRefs.current[clauseId]) {
-      clauseRefs.current[clauseId].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-  };
-
-  const handleCopyClause = (text) => {
-    navigator.clipboard.writeText(text);
-    setCopiedText(true);
-    setTimeout(() => setCopiedText(false), 2000);
-  };
-
-  const handleRedlineClick = (clause) => {
-    if (onSelectForRedline) onSelectForRedline(clause);
-    onNavigate(ROUTES.COMPARISON);
-  };
 
   return (
     <div 

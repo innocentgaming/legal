@@ -24,14 +24,20 @@ export default function BriefingPage({ document, onNavigate, onLoadSample }) {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const printRef = useRef(null);
+  const roleCacheRef = useRef({});
 
-  const handleGenerateBriefing = useCallback(async () => {
+  const handleGenerateBriefing = useCallback(async (role = targetRole) => {
     if (!document) return;
+    if (roleCacheRef.current[role]) {
+      setBriefingData(roleCacheRef.current[role]);
+      return;
+    }
     setLoading(true);
     try {
-      const data = await briefingService.generateBriefing(targetRole);
-      // Backend returns { status: "success", briefing: { ... }, disclaimer: "..." }
-      setBriefingData(data.briefing || data);
+      const data = await briefingService.generateBriefing(role);
+      const result = data.briefing || data;
+      roleCacheRef.current[role] = result;
+      setBriefingData(result);
     } catch (err) {
       alert(`Failed to generate briefing: ${err.message}`);
     } finally {
@@ -40,10 +46,10 @@ export default function BriefingPage({ document, onNavigate, onLoadSample }) {
   }, [document, targetRole]);
 
   useEffect(() => {
-    if (document && !briefingData) {
-      handleGenerateBriefing();
+    if (document) {
+      handleGenerateBriefing(targetRole);
     }
-  }, [document, briefingData, handleGenerateBriefing]);
+  }, [document, targetRole, handleGenerateBriefing]);
 
   const handleExportMarkdown = () => {
     if (!briefingData) return;
