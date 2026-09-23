@@ -97,6 +97,51 @@ $$\text{UPLOAD} \longrightarrow \text{SIMPLIFY} \longrightarrow \text{INTERROGAT
 
 ## Architecture
 
+```text
+                    ┌─────────────────────┐
+                    │     React UI        │
+                    │                     │
+                    │ Upload              │
+                    │ Clause Viewer       │
+                    │ Risk Panel          │
+                    │ Q&A                 │
+                    │ Comparison          │
+                    │ Lawyer Briefing     │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │     FastAPI         │
+                    │      Backend        │
+                    └──────────┬──────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              ▼                ▼                ▼
+       ┌────────────┐   ┌─────────────┐  ┌──────────────┐
+       │ Ingestion  │   │  Retrieval  │  │ Risk Engine  │
+       └─────┬──────┘   └──────┬──────┘  └──────────────┘
+             │                 │
+             ▼                 ▼
+       ┌────────────┐   ┌─────────────┐
+       │  Clauses   │   │ Embeddings  │
+       └─────┬──────┘   └──────┬──────┘
+             │                 │
+             └────────┬────────┘
+                      ▼
+               ┌──────────────┐
+               │  Grounded    │
+               │  LLM         │
+               └──────┬───────┘
+                      │
+          ┌───────────┼────────────┐
+          ▼           ▼            ▼
+       Q&A        Comparison    Briefing
+          │           │            │
+          └───────────┴────────────┘
+                      ▼
+              Exact Citations
+```
+
 ```mermaid
 graph TD
     subgraph Client["Frontend Layer (React + Vite)"]
