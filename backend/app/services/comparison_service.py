@@ -235,7 +235,10 @@ class ComparisonService:
             text_b = cb["original_text"]
 
             # Exact or near-exact match
-            if sim >= 0.92 or text_a.strip() == text_b.strip():
+            clean_a = re.sub(r"\s+", " ", text_a).strip()
+            clean_b = re.sub(r"\s+", " ", text_b).strip()
+
+            if clean_a == clean_b:
                 diff_type = "MATCH"
                 explanation = "Both documents contain substantively identical contractual language."
                 why_it_matters = "No operational or legal divergence between the two versions."

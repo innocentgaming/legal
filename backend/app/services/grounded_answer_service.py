@@ -261,18 +261,35 @@ class GroundedAnswerService:
 
         best_chunk = None
         best_sentence = ""
-        best_score = 0
+        best_score = -1.0
 
         for c in chunks:
             text = c.get("original_text") or c.get("text") or ""
             sentences = [s.strip() for s in re.split(r"(?<=[.?!])\s+", text) if s.strip()]
-            for s in sentences:
+            for s_idx, s in enumerate(sentences):
                 s_low = s.lower()
-                matches = sum(1 for w in substantive_q_terms if w in s_low)
+                # Score substantive keyword & stem matches
+                matches = 0
+                for w in substantive_q_terms:
+                    w_stem = w[:5] if len(w) >= 6 else w
+                    if w in s_low or w_stem in s_low:
+                        matches += 1.0
+
+                # Give bonus to operative sentences containing numbers, terms, or modals
+                if any(m in s_low for m in ["shall", "may", "must", "will", "days", "months", "$", "percent", "upon", "notice"]):
+                    matches += 0.75
+
+                # Penalize bare short heading fragments (< 30 chars with no verbs)
+                if len(s) < 30 and not any(v in s_low for v in ["shall", "may", "must", "will", "agrees", "is", "pay"]):
+                    matches -= 0.5
+
                 if matches > best_score:
                     best_score = matches
                     best_chunk = c
                     best_sentence = s
+                    # If this sentence was a short title prefix and there is a subsequent operative sentence, join them
+                    if len(s) < 35 and s_idx + 1 < len(sentences):
+                        best_sentence = f"{s} {sentences[s_idx + 1]}"
 
         if not best_chunk or not best_sentence or best_score == 0:
             return {

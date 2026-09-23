@@ -190,19 +190,28 @@ class ClauseSegmentationService:
     @classmethod
     def _detect_section_header(cls, text: str) -> Dict[str, str] | None:
         first_line = text.split("\n")[0].strip()
-        if len(first_line) > 120 or len(first_line) < 3:
+        if len(first_line) < 3:
             return None
 
-        # 1. SECTION / ARTICLE / CLAUSE 1.2: Title [Remainder]
-        m1 = re.match(r"^(?:SECTION|ARTICLE|CLAUSE)\s+([0-9IVXLCDM]+(?:\.[0-9]+)*)[:\.\-\s]*(.*?)(?::\s*(.*))?$", first_line, re.IGNORECASE)
+        # 1. SECTION / ARTICLE / CLAUSE 1.2: Title. Remainder or Title [Newline]
+        m1 = re.match(r"^(?:SECTION|ARTICLE|CLAUSE)\s+([0-9IVXLCDM]+(?:\.[0-9]+)*)[:\.\-\s]*(.*)$", first_line, re.IGNORECASE)
         if m1:
             num = m1.group(1).strip()
-            title = m1.group(2).strip() or f"Section {num}"
-            remainder = m1.group(3) or ""
+            rest = m1.group(2).strip()
+            
+            # Check if inline remainder exists after first sentence/title
+            m_split = re.match(r"^([^.:]{2,50}[.:])\s+(.*)$", rest)
+            if m_split:
+                title = m_split.group(1).rstrip(".:").strip()
+                remainder = m_split.group(2).strip()
+            else:
+                title = rest or f"Clause {num}"
+                remainder = ""
+
             return {"number": num, "title": title, "remainder": remainder}
 
-        # 2. 1. Title: Remainder (e.g. 1. SERVICES: Provider will...)
-        m_inline = re.match(r"^([0-9]+(?:\.[0-9]+)*)\.?\s+([A-Za-z0-9\s,\-\/\(\)\&]{2,45}):\s+(.*)$", first_line)
+        # 2. 1. Title: Remainder or 1. Title. Remainder (e.g. 1. SERVICES: Provider will...)
+        m_inline = re.match(r"^([0-9]+)\.?\s+([A-Za-z0-9\s,\-\/\(\)\&]{2,45})[:.]\s+(.*)$", first_line)
         if m_inline:
             num = m_inline.group(1).strip()
             title = m_inline.group(2).strip()

@@ -149,6 +149,7 @@ export default function WorkspacePage({
       {/* 1. LEFT COLUMN: Clause Navigation                         */}
       {/* ========================================================= */}
       <aside 
+        role="navigation"
         aria-label="Clause Navigation"
         className="glass-panel"
         style={{
@@ -318,6 +319,7 @@ export default function WorkspacePage({
       {/* 2. CENTER COLUMN: Document / Clause Content Viewer        */}
       {/* ========================================================= */}
       <section 
+        role="main"
         aria-label="Clause Content Viewer"
         className="glass-panel"
         style={{
