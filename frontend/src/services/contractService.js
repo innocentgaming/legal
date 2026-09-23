@@ -46,10 +46,10 @@ export const comparisonService = {
     });
   },
 
-  compareDocuments: (textA, textB, labelA = 'Version A', labelB = 'Version B') => {
-    return apiClient.post('/comparison/documents', {
-      document_text_a: textA,
-      document_text_b: textB,
+  compareDocuments: (docA, docB, labelA = 'Document A', labelB = 'Document B') => {
+    return apiClient.post('/compare', {
+      document_a: docA,
+      document_b: docB,
       label_a: labelA,
       label_b: labelB,
     });

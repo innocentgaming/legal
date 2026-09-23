@@ -29,6 +29,34 @@ class ClauseSegmentationService:
     ]
 
     @classmethod
+    def segment(cls, text_or_doc: Any) -> List[Dict[str, Any]]:
+        """
+        Convenience segmenter returning flattened clause dictionaries.
+        """
+        if isinstance(text_or_doc, dict):
+            parsed = text_or_doc
+        elif isinstance(text_or_doc, str):
+            parsed = {"raw_text": text_or_doc, "pages": []}
+        else:
+            parsed = {"raw_text": str(text_or_doc), "pages": []}
+
+        sections = cls.segment_document(parsed)
+        flat_clauses = []
+        for s in sections:
+            for c in s.clauses:
+                flat_clauses.append({
+                    "clause_id": c.clause_id,
+                    "clause_number": c.clause_number,
+                    "title": c.title,
+                    "original_text": c.original_text,
+                    "text": c.original_text,
+                    "page": c.page,
+                    "section_id": c.section_id,
+                    "category": c.category
+                })
+        return flat_clauses
+
+    @classmethod
     def segment_document(cls, parsed_doc: Dict[str, Any]) -> List[SectionModel]:
         raw_text = parsed_doc.get("raw_text", "")
         pages = parsed_doc.get("pages", [])

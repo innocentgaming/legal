@@ -77,3 +77,5 @@ class EmbeddingService:
         if norm > 0:
             q_vec = q_vec / norm
         return q_vec
+
+embedding_service = EmbeddingService()

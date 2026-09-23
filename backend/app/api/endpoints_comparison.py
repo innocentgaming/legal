@@ -1,14 +1,69 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
+from typing import Any, Dict
 from backend.app.schemas.comparison import (
     ClauseComparisonRequest, 
     ClauseComparisonResponse, 
     DocumentCompareRequest, 
-    DocumentCompareResponse
+    DocumentCompareResponse,
+    CompareTwoDocumentsRequest,
+    CompareTwoDocumentsResponse
 )
 from backend.app.services.comparison_service import ComparisonService
 from backend.app.services.ingestion_service import ingestion_service
 
 router = APIRouter(tags=["Clause Redline & Version Comparison"])
+
+@router.post("/compare", response_model=CompareTwoDocumentsResponse)
+async def compare_two_documents(req: CompareTwoDocumentsRequest):
+    """
+    PHASE 6: Two-Document Comparison Endpoint.
+    Semantically aligns clauses between Document A and Document B,
+    classifies difference types (MATCH, MODIFIED, ADDED, REMOVED),
+    and explains concrete differences without subjective bias.
+    """
+    doc_a = req.document_a
+    doc_b = req.document_b
+
+    if not doc_a or not doc_b:
+        raise HTTPException(
+            status_code=400, 
+            detail="Both 'document_a' and 'document_b' are required for comparison."
+        )
+
+    try:
+        comparison_res = ComparisonService.compare_two_documents(
+            doc_a=doc_a,
+            doc_b=doc_b,
+            label_a=req.label_a or "Document A",
+            label_b=req.label_b or "Document B"
+        )
+        return comparison_res
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Semantic two-document comparison failed: {str(e)}"
+        )
+
+@router.post("/comparison/documents", response_model=CompareTwoDocumentsResponse)
+async def compare_documents_legacy(req: DocumentCompareRequest):
+    """
+    Backward compatible endpoint for document comparison.
+    """
+    doc_a = req.document_a or req.document_text_a
+    doc_b = req.document_b or req.document_text_b
+
+    if not doc_a or not doc_b:
+        raise HTTPException(status_code=400, detail="Both document texts are required for comparison.")
+
+    try:
+        return ComparisonService.compare_two_documents(
+            doc_a=doc_a,
+            doc_b=doc_b,
+            label_a=req.label_a or "Document A",
+            label_b=req.label_b or "Document B"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Document comparison failed: {str(e)}")
 
 @router.post("/comparison/clause", response_model=ClauseComparisonResponse)
 async def redline_clause(req: ClauseComparisonRequest):
@@ -42,24 +97,3 @@ async def redline_clause(req: ClauseComparisonRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Redline generation failed: {str(e)}")
-
-@router.post("/comparison/documents", response_model=DocumentCompareResponse)
-async def compare_documents(req: DocumentCompareRequest):
-    if not req.document_text_a.strip() or not req.document_text_b.strip():
-        raise HTTPException(status_code=400, detail="Both document texts are required for comparison.")
-
-    try:
-        diff_summary = ComparisonService.compare_documents(
-            text_a=req.document_text_a,
-            text_b=req.document_text_b,
-            label_a=req.label_a or "Version A",
-            label_b=req.label_b or "Version B"
-        )
-        return {
-            "status": "success",
-            "similarity_score": diff_summary["similarity_score"],
-            "total_differences": diff_summary["total_differences"],
-            "clause_diffs": diff_summary["clause_diffs"]
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Document comparison failed: {str(e)}")
