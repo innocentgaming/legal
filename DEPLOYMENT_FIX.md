@@ -1,21 +1,21 @@
 # Clarity — Deployment Fix & Production Guide
 
 ## 1. Root Cause Analysis
-The Render deployment failure (`Exited with status 1 while running your code`) was caused by two compounding factors in the deployment configuration:
+The Render deployment failure (`Exited with status 1 while running your code`) had three distinct causes:
 
-1. **Multi-Stage Node/Alpine Architecture Mismatch in `Dockerfile`**:
-   - The original `Dockerfile` attempted to build the frontend via `node:20-alpine` with `npm ci --silent`.
-   - The committed `package-lock.json` was generated in a Windows environment and lacked `@rollup/rollup-linux-x64-musl` and Linux native bindings.
-   - When executed in Alpine Linux on Render, `vite build` exited with code 1 after ~35–45 seconds.
-   - Furthermore, `clarity-legal-api` is exclusively the backend FastAPI API web service (the frontend is already hosted independently on Vercel at `https://legal-eight-psi.vercel.app/`). Building the frontend in Docker was redundant and introduced failure points.
+1. **Missing `email-validator` Dependency in `backend/requirements.txt` (Critical Startup Crash)**:
+   - Commit `dba549d` introduced JWT Authentication with Pydantic's `EmailStr` field in [`backend/app/schemas/auth.py`](file:///d:/legalAi/backend/app/schemas/auth.py).
+   - `EmailStr` in Pydantic v2 requires the external `email-validator` package (`pydantic[email]`).
+   - Because `email-validator` was omitted from `backend/requirements.txt`, clean production environments (like Render) crashed on module import with `PydanticImportError: 'email-validator' is not installed`, causing the container/process to exit with status 1 on startup.
 
-2. **Hardcoded Port Binding vs. Render `$PORT` Dynamic Injection**:
-   - The container `CMD` hardcoded `["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]`.
-   - On Render, web services dynamically allocate a `$PORT` (typically `10000`) and expect the process to bind to `0.0.0.0:$PORT`.
-   - JSON exec-form `CMD` does not perform shell variable expansion, causing uvicorn to ignore Render's `$PORT`.
+2. **Multi-Stage Node/Alpine Architecture Mismatch in `Dockerfile`**:
+   - The initial `Dockerfile` had a multi-stage build that invoked `node:20-alpine` with `npm ci --silent` against a Windows-generated `package-lock.json` lacking Linux native Rollup binaries.
 
-3. **Missing Package Initialization (`__init__.py`) Files**:
-   - Several subpackages under `backend/app/` lacked `__init__.py` markers, which could cause module resolution ambiguities under standard Linux Python packaging.
+3. **Hardcoded Port Binding vs. Render `$PORT` Dynamic Injection**:
+   - The container `CMD` hardcoded `--port 8000` via JSON exec-form, preventing dynamic binding to Render's `$PORT` (`10000`).
+
+4. **Missing Python Environment Flags**:
+   - Added `PYTHONUTF8=1` and explicit `PYTHONPATH=/app` to ensure clean module discovery and UTF-8 string encoding across all environments.
 
 ---
 
