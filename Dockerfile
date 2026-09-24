@@ -1,15 +1,6 @@
-# Multi-Stage Production Dockerfile for Clarity AI Legal Co-Pilot
-
-# Stage 1: Build Frontend Static Assets
-FROM node:20-alpine AS frontend-builder
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm ci --silent
-COPY frontend/ ./
-RUN npm run build
-
-# Stage 2: Production Backend Runtime
+# Production Dockerfile for Clarity AI Legal Co-Pilot Backend API
 FROM python:3.11-slim AS production
+
 WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1 \
@@ -17,7 +8,7 @@ ENV PYTHONUNBUFFERED=1 \
     PORT=8000 \
     ENVIRONMENT=production
 
-# Install system dependencies
+# Install essential system dependencies and clean apt cache
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
@@ -28,14 +19,11 @@ COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r backend/requirements.txt
 
-# Copy backend application code
+# Copy application source code and bundled legal benchmark samples
 COPY backend ./backend
 COPY samples ./samples
 
-# Copy compiled frontend assets from stage 1
-COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
-
 EXPOSE 8000
 
-# Run uvicorn server
-CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run uvicorn server with dynamic port resolution for Render ($PORT)
+CMD ["sh", "-c", "python -m uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
