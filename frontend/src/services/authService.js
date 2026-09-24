@@ -38,7 +38,7 @@ export const authService = {
   },
 
   async register(name, email, password) {
-    const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),
@@ -53,7 +53,7 @@ export const authService = {
   },
 
   async login(email, password) {
-    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -70,7 +70,7 @@ export const authService = {
   async getProfile() {
     const token = this.getToken();
     if (!token) return null;
-    const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+    const res = await fetch(`${API_BASE_URL}/auth/me`, {
       headers: this.getAuthHeaders(),
     });
     if (!res.ok) {
@@ -83,7 +83,7 @@ export const authService = {
   },
 
   async getSavedContracts() {
-    const res = await fetch(`${API_BASE_URL}/api/auth/contracts`, {
+    const res = await fetch(`${API_BASE_URL}/auth/contracts`, {
       headers: this.getAuthHeaders(),
     });
     if (!res.ok) {
@@ -94,7 +94,7 @@ export const authService = {
   },
 
   async saveActiveContract(notes = '') {
-    const res = await fetch(`${API_BASE_URL}/api/auth/contracts/save`, {
+    const res = await fetch(`${API_BASE_URL}/auth/contracts/save`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ notes }),
@@ -107,7 +107,7 @@ export const authService = {
   },
 
   async loadSavedContract(contractId) {
-    const res = await fetch(`${API_BASE_URL}/api/auth/contracts/${contractId}`, {
+    const res = await fetch(`${API_BASE_URL}/auth/contracts/${contractId}`, {
       headers: this.getAuthHeaders(),
     });
     if (!res.ok) {
@@ -118,7 +118,7 @@ export const authService = {
   },
 
   async deleteSavedContract(contractId) {
-    const res = await fetch(`${API_BASE_URL}/api/auth/contracts/${contractId}`, {
+    const res = await fetch(`${API_BASE_URL}/auth/contracts/${contractId}`, {
       method: 'DELETE',
       headers: this.getAuthHeaders(),
     });

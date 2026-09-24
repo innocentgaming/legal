@@ -6,7 +6,11 @@ export const ROUTES = {
   BRIEFING: '/briefing',
 };
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
+const defaultApiUrl = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+  ? 'https://clarity-legal-api.onrender.com/api'
+  : 'http://127.0.0.1:8000/api';
+
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || defaultApiUrl).replace(/\/+$/, '');
 
 export const RISK_LEVELS = {
   HIGH: 'High',
