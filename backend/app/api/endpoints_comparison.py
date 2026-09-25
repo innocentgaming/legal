@@ -31,7 +31,9 @@ async def compare_two_documents(req: CompareTwoDocumentsRequest):
         )
 
     try:
-        comparison_res = ComparisonService.compare_two_documents(
+        import asyncio
+        comparison_res = await asyncio.to_thread(
+            ComparisonService.compare_two_documents,
             doc_a=doc_a,
             doc_b=doc_b,
             label_a=req.label_a or "Document A",

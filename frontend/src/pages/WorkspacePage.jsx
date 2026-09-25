@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, useDeferredValue } from 'react';
 import { 
   ShieldAlert, 
   MessageSquare, 
@@ -35,6 +35,7 @@ export default function WorkspacePage({
     clauses && clauses.length > 0 ? (clauses[0].clause_id || clauses[0].id) : null
   );
   const [navSearch, setNavSearch] = useState('');
+  const deferredSearch = useDeferredValue(navSearch);
   const [navRiskFilter, setNavRiskFilter] = useState('ALL');
   const [copiedText, setCopiedText] = useState(false);
   const clauseRefs = useRef({});
@@ -55,9 +56,9 @@ export default function WorkspacePage({
     ) || clauses[0] || null;
   }, [clauses, selectedClauseId]);
 
-  // Filtered clause navigation list
+  // Filtered clause navigation list with deferred search for 60fps input responsiveness
   const filteredClauses = useMemo(() => {
-    const sLower = navSearch.trim().toLowerCase();
+    const sLower = deferredSearch.trim().toLowerCase();
     return (clauses || []).filter((c) => {
       const cRisk = (c.risk_level || 'STANDARD').toUpperCase().replace(' ', '_');
       const matchesRisk = navRiskFilter === 'ALL' || cRisk === navRiskFilter;
@@ -70,7 +71,7 @@ export default function WorkspacePage({
         (c.text && c.text.toLowerCase().includes(sLower));
       return matchesRisk && matchesSearch;
     });
-  }, [clauses, navRiskFilter, navSearch]);
+  }, [clauses, navRiskFilter, deferredSearch]);
 
   const handleJumpToClause = useCallback((clauseId) => {
     setSelectedClauseId(clauseId);

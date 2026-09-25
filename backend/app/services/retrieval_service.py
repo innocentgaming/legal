@@ -49,12 +49,13 @@ class RetrievalService:
             exact_boosts.append(b)
 
         total_scores = sim_scores + np.array(exact_boosts, dtype=np.float32)
-        top_indices = np.argsort(total_scores)[::-1][:top_k]
+        import heapq
+        top_candidates = heapq.nlargest(top_k, enumerate(total_scores), key=lambda x: x[1])
 
         results = []
-        for idx in top_indices:
+        for idx, score in top_candidates:
             clause_dict = dict(self.clauses[idx])
-            clause_dict["relevance_score"] = float(total_scores[idx])
+            clause_dict["relevance_score"] = float(score)
             results.append(clause_dict)
 
         return results

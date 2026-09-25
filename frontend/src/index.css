@@ -357,3 +357,22 @@ body {
     box-shadow: none !important;
   }
 }
+
+/* High-Performance DOM Virtualization & Rendering Containment */
+.clause-card, 
+.clause-item, 
+.clause-diff-card, 
+.virtualized-clause-row,
+.briefing-card,
+.summary-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 130px;
+  contain: layout style paint;
+}
+
+.diff-column-scroll,
+.clause-list-scroll {
+  will-change: scroll-position;
+  contain: content;
+}
+

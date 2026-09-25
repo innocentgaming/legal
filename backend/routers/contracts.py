@@ -48,11 +48,12 @@ async def upload_contract(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=f"File size exceeds maximum allowed limit ({settings.MAX_FILE_SIZE_MB}MB)")
 
     try:
-        parsed_doc = DocumentParser.parse_file(filename, content)
-        chunks = LegalChunker.segment_document(parsed_doc)
+        import asyncio
+        parsed_doc = await asyncio.to_thread(DocumentParser.parse_file, filename, content)
+        chunks = await asyncio.to_thread(LegalChunker.segment_document, parsed_doc)
         
-        # Index in in-memory vector store
-        vector_store.index_document(parsed_doc, chunks)
+        # Index in in-memory vector store asynchronously
+        await asyncio.to_thread(vector_store.index_document, parsed_doc, chunks)
         
         # Store state
         current_document_state.clear()

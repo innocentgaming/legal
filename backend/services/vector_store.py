@@ -103,12 +103,13 @@ class InMemoryVectorStore:
 
         final_scores = sim_scores + np.array(exact_matches, dtype=np.float32)
 
-        top_indices = np.argsort(final_scores)[::-1][:top_k]
+        import heapq
+        top_candidates = heapq.nlargest(top_k, enumerate(final_scores), key=lambda x: x[1])
         
         results = []
-        for idx in top_indices:
+        for idx, score in top_candidates:
             chunk_copy = dict(self.chunks[idx])
-            chunk_copy["relevance_score"] = float(final_scores[idx])
+            chunk_copy["relevance_score"] = float(score)
             results.append(chunk_copy)
 
         return results

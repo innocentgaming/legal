@@ -28,6 +28,7 @@ class ComparisonService:
     Performs semantic clause alignment, diff classification (MATCH, MODIFIED, ADDED, REMOVED),
     and objective legal difference explanations.
     """
+    _cache: Dict[str, Any] = {}
 
     @classmethod
     def compare_two_documents(
@@ -39,17 +40,23 @@ class ComparisonService:
     ) -> Dict[str, Any]:
         """
         Main Phase 6 entrypoint for two-document comparison.
-        1. Segment both documents into clauses.
-        2. Generate semantic embeddings and pairwise similarities.
-        3. Semantically align related clauses.
-        4. Classify each pair into MATCH, MODIFIED, ADDED, REMOVED.
-        5. Generate concrete, neutral legal difference explanations.
+        1. Check memory cache for pre-computed alignment.
+        2. Segment both documents into clauses.
+        3. Generate semantic embeddings and pairwise similarities.
+        4. Semantically align related clauses.
+        5. Classify each pair into MATCH, MODIFIED, ADDED, REMOVED.
+        6. Generate concrete, neutral legal difference explanations.
         """
+        import hashlib
+        cache_key = hashlib.sha256(f"{str(doc_a)}::{str(doc_b)}::{label_a}::{label_b}".encode("utf-8")).hexdigest()
+        if cache_key in cls._cache:
+            return cls._cache[cache_key]
+
         clauses_a = cls._normalize_to_clauses(doc_a, label_prefix="A")
         clauses_b = cls._normalize_to_clauses(doc_b, label_prefix="B")
 
         if not clauses_a and not clauses_b:
-            return {
+            res = {
                 "clause_pairs": [],
                 "summary": {
                     "total_pairs": 0,
@@ -62,6 +69,7 @@ class ComparisonService:
                 "label_a": label_a,
                 "label_b": label_b,
             }
+            return res
 
         # Align clauses semantically
         clause_pairs = cls._align_clauses_semantically(clauses_a, clauses_b)
@@ -79,7 +87,7 @@ class ComparisonService:
         else:
             overall_similarity = 0.0
 
-        return {
+        res = {
             "clause_pairs": clause_pairs,
             "summary": {
                 "total_pairs": total,
@@ -92,6 +100,10 @@ class ComparisonService:
             "label_a": label_a,
             "label_b": label_b,
         }
+        if len(cls._cache) > 128:
+            cls._cache.clear()
+        cls._cache[cache_key] = res
+        return res
 
     @classmethod
     def _normalize_to_clauses(cls, doc_input: Any, label_prefix: str = "A") -> List[Dict[str, Any]]:

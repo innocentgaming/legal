@@ -42,7 +42,8 @@ async def upload_document(file: UploadFile = File(...)):
         )
 
     try:
-        doc = ingestion_service.ingest_file(filename, content)
+        import asyncio
+        doc = await asyncio.to_thread(ingestion_service.ingest_file, filename, content)
         return doc.to_dict()
     except DocumentProcessingError as e:
         raise HTTPException(status_code=422, detail=e.message)
