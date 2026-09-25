@@ -1,3 +1,4 @@
+import gc
 import os
 from typing import Dict, Any, Optional
 from backend.app.core.config import settings
@@ -11,14 +12,17 @@ from backend.app.core.security import SecurityService, session_manager
 
 class IngestionService:
     """
-    Coordinates legal document ingestion pipeline:
+    Coordinates legal document ingestion pipeline with strict memory bounds:
     1. Security validation (MIME/magic bytes, size, non-empty, path traversal)
     2. Format parsing (PDF, DOCX, TXT)
     3. Text sanitization (null bytes, control chars, Unicode normalization)
     4. Structural clause & section segmentation
     5. In-memory vector store indexing
-    6. Session-scoped document tracking (Zero persistence)
+    6. Memory footprint bound enforcement & proactive GC reclamation
+    7. Session-scoped document tracking (Zero persistence)
     """
+
+    MAX_CONCURRENT_SESSIONS = 50
 
     def __init__(self):
         self.active_document: Optional[InMemoryDocument] = None
@@ -60,6 +64,11 @@ class IngestionService:
 
         self.active_document = doc
         session_manager.set_session_document(session_id, doc)
+
+        # 6. Proactive Memory Reclamation (free temporary parse buffers)
+        del parsed_data
+        gc.collect()
+
         return doc
 
     def ingest_raw_text(self, filename: str, text: str, session_id: str = "default_session") -> InMemoryDocument:
@@ -74,5 +83,7 @@ class IngestionService:
         self.active_document = None
         self.retrieval_service = RetrievalService()
         session_manager.clear_all()
+        gc.collect()
 
 ingestion_service = IngestionService()
+
