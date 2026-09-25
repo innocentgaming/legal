@@ -91,3 +91,65 @@ def test_performance_pipeline_benchmarking():
     assert t_embed < 50.0, f"Embedding indexing took {t_embed}ms, expected < 50ms"
     assert t_retrieval < 20.0, f"Retrieval took {t_retrieval}ms, expected < 20ms"
     assert t_qa < 2000.0, f"Grounded QA took {t_qa}ms, expected < 2000ms"
+
+def test_caching_and_repeat_latency_benchmarks():
+    """
+    Tests and benchmarks before/after latency for repeat comparisons and repeat retrievals.
+    Validates cache hit performance and cache invalidation on modified input.
+    """
+    from backend.app.services.comparison_service import ComparisonService
+    
+    # 1. Benchmark RetrievalService Pre-Caching and Repeat Query Performance
+    raw_bytes = BENCHMARK_CONTRACT.encode("utf-8")
+    parsed = DocumentParserService.parse("Benchmark_Contract.txt", raw_bytes)
+    sections = ClauseSegmentationService.segment_document(parsed)
+    flat_clauses = [c.to_dict() for s in sections for c in s.clauses]
+
+    # Initialize with pre-cached index
+    retriever = RetrievalService(clauses=flat_clauses)
+    assert retriever.doc_matrix is not None
+    assert len(retriever.vocab) > 0
+
+    # Cold Retrieval (first query call)
+    t0 = time.perf_counter()
+    cold_results = retriever.search("indemnification liabilities", top_k=4)
+    cold_retrieval_ms = (time.perf_counter() - t0) * 1000
+
+    # Repeat Retrieval (cache hit)
+    t0 = time.perf_counter()
+    warm_results = retriever.search("indemnification liabilities", top_k=4)
+    warm_retrieval_ms = (time.perf_counter() - t0) * 1000
+
+    assert len(cold_results) == len(warm_results)
+    assert warm_retrieval_ms <= cold_retrieval_ms or warm_retrieval_ms < 1.0
+
+    # Test Invalidation on build_index
+    retriever.build_index(flat_clauses[:2])
+    assert len(retriever._query_cache) == 0
+
+    # 2. Benchmark ComparisonService Cold vs Repeat Cached Comparison
+    doc_a = BENCHMARK_CONTRACT
+    doc_b = BENCHMARK_CONTRACT.replace("October 1, 2026", "November 1, 2026")
+
+    # Clear comparison cache to measure cold
+    ComparisonService._cache.clear()
+    t0 = time.perf_counter()
+    res_cold = ComparisonService.compare_two_documents(doc_a, doc_b, "v1", "v2")
+    cold_compare_ms = (time.perf_counter() - t0) * 1000
+
+    # Repeat Comparison (cache hit)
+    t0 = time.perf_counter()
+    res_warm = ComparisonService.compare_two_documents(doc_a, doc_b, "v1", "v2")
+    warm_compare_ms = (time.perf_counter() - t0) * 1000
+
+    assert res_cold["summary"]["total_pairs"] == res_warm["summary"]["total_pairs"]
+    assert warm_compare_ms < 1.0, f"Cached comparison took {warm_compare_ms}ms, expected < 1.0ms"
+
+    print("\n" + "=" * 60)
+    print("  REPEAT LATENCY & CACHING BENCHMARKS")
+    print("=" * 60)
+    print(f"  * Cold Retrieval Latency          : {cold_retrieval_ms:>7.2f} ms")
+    print(f"  * Repeat Retrieval (Cache Hit)    : {warm_retrieval_ms:>7.2f} ms")
+    print(f"  * Cold Comparison Latency         : {cold_compare_ms:>7.2f} ms")
+    print(f"  * Repeat Comparison (Cache Hit)   : {warm_compare_ms:>7.2f} ms")
+    print("=" * 60)

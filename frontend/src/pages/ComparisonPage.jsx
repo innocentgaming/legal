@@ -86,6 +86,15 @@ This Agreement shall remain in effect indefinitely. Recipient's non-disclosure d
   }
 ];
 
+// Fast deterministic hash for client-side comparison cache keys
+function hashString(str = '') {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+  }
+  return (hash >>> 0).toString(36);
+}
+
 export default function ComparisonPage({
   document,
   clauses,
@@ -105,8 +114,8 @@ export default function ComparisonPage({
   const [filterType, setFilterType] = useState('ALL'); // 'ALL' | 'MODIFIED' | 'ADDED' | 'REMOVED' | 'MATCH'
   const [inspectedClause, setInspectedClause] = useState(null);
 
-  // Client-side comparison cache
-  const comparisonCacheRef = useRef({});
+  // Client-side comparison cache (LRU-style with Map, max capacity ~20 entries)
+  const comparisonCacheRef = useRef(new Map());
 
   // Clause Redline state
   const [activeClause, setActiveClause] = useState(() => selectedClause || (clauses && clauses[0]) || null);
@@ -120,15 +129,29 @@ export default function ComparisonPage({
       alert('Please provide text for both Document A and Document B.');
       return;
     }
-    const cacheKey = `${textA.slice(0, 100)}_${textB.slice(0, 100)}_${lA}_${lB}`;
-    if (comparisonCacheRef.current[cacheKey]) {
-      setComparisonResult(comparisonCacheRef.current[cacheKey]);
+    const hashA = hashString(textA);
+    const hashB = hashString(textB);
+    const cacheKey = `${hashA}::${hashB}::${lA}::${lB}`;
+    const cache = comparisonCacheRef.current;
+
+    if (cache.has(cacheKey)) {
+      const cached = cache.get(cacheKey);
+      // Refresh key for LRU eviction order
+      cache.delete(cacheKey);
+      cache.set(cacheKey, cached);
+      setComparisonResult(cached);
       return;
     }
+
     setIsComparing(true);
     try {
       const data = await comparisonService.compareDocuments(textA, textB, lA, lB);
-      comparisonCacheRef.current[cacheKey] = data;
+      // Evict oldest entry if capacity exceeded
+      if (cache.size >= 20) {
+        const oldestKey = cache.keys().next().value;
+        if (oldestKey) cache.delete(oldestKey);
+      }
+      cache.set(cacheKey, data);
       setComparisonResult(data);
     } catch (err) {
       alert(`Comparison failed: ${err.message}`);
