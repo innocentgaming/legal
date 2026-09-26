@@ -17,6 +17,10 @@
 
 ---
 
+![Clarity Platform Demo](clarity_demo_recording.webp)
+
+---
+
 ## Table of Contents
 - [Problem](#problem)
 - [Solution](#solution)
